@@ -1,10 +1,10 @@
-# Tessera
+# Neno
 
-**Tessera — Französisch: Vokabeln, Formen, Grammatik**
+**Neno — Französisch: Vokabeln, Formen, Grammatik**
 
 Flashcards for German speakers learning French at B1 and up: vocabulary with its gender, verb forms, prepositions, and grammar learned through sentences. Installable web app, works offline, progress stays on the device.
 
-The name is Latin for a mosaic tile and modern Italian for a card: a language assembled one piece at a time. It carries to other languages, so a Spanish or Italian edition keeps the same brand.
+*Neno* is Swahili for **word**. The name belongs to no European language, so a Spanish or Italian edition keeps the same brand.
 
 - What it teaches: [CURRICULUM.md](CURRICULUM.md)
 - Cards: `src/data/cards.json`, checked with `npm run validate`
@@ -13,7 +13,7 @@ The name is Latin for a mosaic tile and modern Italian for a card: a language as
 
 ## Install on iPhone
 
-Open the site in Safari, tap Share, then "Zum Home-Bildschirm". The app appears as **Tessera**.
+Open the site in Safari, tap Share, then "Zum Home-Bildschirm". The app appears as **Neno**.
 
 ## Content pipeline
 

@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['apple-touch-icon.png', 'icon.svg'],
       manifest: {
-        name: 'Tessera: Französisch',
-        short_name: 'Tessera',
+        name: 'Neno: Französisch',
+        short_name: 'Neno',
         description: 'Vokabeln, Formen, Grammatik. Französisch Karte für Karte.',
         lang: 'de',
         start_url: '.',
