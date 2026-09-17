@@ -246,6 +246,36 @@ export async function grade(id: string, g: Grade): Promise<Date> {
   return card.due
 }
 
+const PALETTE_KEY = 'cartes.palette'
+export type Palette = 'abricot' | 'pistache' | 'framboise' | 'bleu'
+export const PALETTES: { id: Palette; label: string }[] = [
+  { id: 'abricot', label: 'Abricot' },
+  { id: 'pistache', label: 'Pistache' },
+  { id: 'framboise', label: 'Framboise' },
+  { id: 'bleu', label: 'Bleu' },
+]
+
+export function getPalette(): Palette {
+  try {
+    const p = localStorage.getItem(PALETTE_KEY) as Palette | null
+    return p && PALETTES.some((x) => x.id === p) ? p : 'abricot'
+  } catch {
+    return 'abricot'
+  }
+}
+
+export function applyPalette(palette: Palette) {
+  try {
+    localStorage.setItem(PALETTE_KEY, palette)
+  } catch {
+    /* storage unavailable, the choice just will not persist */
+  }
+  // 'bleu' is the original palette, which lives on :root without an attribute
+  const root = document.documentElement
+  if (palette === 'bleu') root.removeAttribute('data-palette')
+  else root.setAttribute('data-palette', palette)
+}
+
 const THEME_KEY = 'cartes.theme'
 export type Theme = 'system' | 'light' | 'dark'
 

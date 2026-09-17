@@ -23,11 +23,14 @@ import {
   getSkip,
   grade,
   importBackup,
+  applyPalette,
   applyTheme,
   cardsInTopic,
   dueTomorrow,
+  getPalette,
   getTheme,
   streak,
+  PALETTES,
   placementBands,
   preview,
   resetProgress,
@@ -38,6 +41,7 @@ import {
   wordsUpToRank,
   type Band,
   type Limits,
+  type Palette,
   type Theme,
   type SkipSettings,
   type Stats,
@@ -82,6 +86,7 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
   const [days, setDays] = useState(0)
   const [theme, setTheme] = useState<Theme>(getTheme)
   const [autoSpeak, setAuto] = useState(getAutoSpeak)
+  const [palette, setPalette] = useState<Palette>(getPalette)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const refresh = useCallback(() => {
@@ -356,6 +361,24 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
             </p>
           </>
         )}
+        <div className="row">
+          <span>Farbe</span>
+          <div className="swatches" role="group" aria-label="Farbe">
+            {PALETTES.map((p) => (
+              <button
+                key={p.id}
+                className={`swatch ${p.id}`}
+                aria-pressed={palette === p.id}
+                aria-label={p.label}
+                title={p.label}
+                onClick={() => {
+                  setPalette(p.id)
+                  applyPalette(p.id)
+                }}
+              />
+            ))}
+          </div>
+        </div>
         <div className="row">
           <span>Aussehen</span>
           <div className="segmented" role="group" aria-label="Aussehen">

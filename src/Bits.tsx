@@ -47,14 +47,14 @@ export function Ring({ done, total }: { done: number; total: number }) {
 export function Seal({ score, perfect }: { score: string; perfect: boolean }) {
   return (
     <svg className="seal" width="150" height="168" viewBox="0 0 150 168" role="img" aria-label={`Ergebnis ${score}`}>
-      <path d="M58 104 L44 160 L64 146 L75 164 L75 104Z" fill="var(--navy)" />
-      <path d="M92 104 L106 160 L86 146 L75 164 L75 104Z" fill="var(--rouge)" />
-      <circle cx="75" cy="68" r="54" fill="var(--surface)" stroke="var(--brass)" strokeWidth="2" />
-      <circle cx="75" cy="68" r="46" fill="none" stroke="var(--brass)" strokeWidth="1" strokeDasharray="1.5 5" opacity="0.7" />
+      <path d="M58 104 L44 160 L64 146 L75 164 L75 104Z" fill="var(--primary)" />
+      <path d="M92 104 L106 160 L86 146 L75 164 L75 104Z" fill="var(--accent)" />
+      <circle cx="75" cy="68" r="54" fill="var(--surface)" stroke="var(--gold)" strokeWidth="2" />
+      <circle cx="75" cy="68" r="46" fill="none" stroke="var(--gold)" strokeWidth="1" strokeDasharray="1.5 5" opacity="0.7" />
       <text x="75" y="70" textAnchor="middle" dominantBaseline="middle" fontFamily="ui-serif, Georgia, serif" fontSize="34" fill="var(--ink)">
         {score}
       </text>
-      <text x="75" y="95" textAnchor="middle" fontSize="8.5" fill="var(--brass)" letterSpacing="2">
+      <text x="75" y="95" textAnchor="middle" fontSize="8.5" fill="var(--gold)" letterSpacing="2">
         {perfect ? 'PARFAIT' : 'RICHTIG'}
       </text>
     </svg>
