@@ -3,6 +3,7 @@
 //
 //   npm run cards:generate -- words --from 1500 --count 40
 //   npm run cards:generate -- topic --topic subjonctif-ausloeser --count 12
+//   npm run cards:generate -- topics --count 12 --concurrency 4 --max-usd 40
 //
 // Add --dry-run to print the prompt without calling the API.
 // Needs ANTHROPIC_API_KEY in .env (see .env.example).
@@ -11,7 +12,7 @@ import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { parseArgs } from 'node:util'
 import * as z from 'zod/v4'
-import { FORMATS, checkCard, dedupeKey, headword, type Card } from '../scripts/card-rules.ts'
+import { FORMATS, checkCard, dedupeKey, headword, sameWord, type Card } from '../scripts/card-rules.ts'
 import { SECTIONS } from '../src/data/topics.ts'
 import { buildWordlist, loadRows, type Lemma } from './lexique.ts'
 
@@ -26,14 +27,18 @@ const { values, positionals } = parseArgs({
     count: { type: 'string', default: '20' },
     batch: { type: 'string', default: '20' },
     topic: { type: 'string' },
+    concurrency: { type: 'string', default: '1' },
+    'max-usd': { type: 'string', default: '10' },
     'dry-run': { type: 'boolean', default: false },
   },
 })
 const mode = positionals[0]
-if (mode !== 'words' && mode !== 'topic') {
-  console.error('Usage: generate.ts words --from N --count N | topic --topic ID --count N [--dry-run]')
+if (mode !== 'words' && mode !== 'topic' && mode !== 'topics') {
+  console.error('Usage: generate.ts words --from N --count N | topic --topic ID --count N | topics --count N')
+  console.error('Options: --batch N --concurrency N --max-usd N --dry-run')
   process.exit(1)
 }
+const maxUsd = Number(values['max-usd'])
 
 const root = new URL('../', import.meta.url)
 const draftsDir = new URL('./out/drafts/', import.meta.url)
@@ -163,6 +168,21 @@ const TopicOutput = z.object({
 
 const client = new Anthropic()
 const usage = { input: 0, output: 0, cacheWrite: 0, cacheRead: 0 }
+let budgetHit = false
+
+/** Runs tasks with a fixed number in flight, keeping the results in input order. */
+async function pool<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
+  const results = new Array<T>(tasks.length)
+  let next = 0
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {
+    while (next < tasks.length) {
+      const i = next++
+      results[i] = await tasks[i]()
+    }
+  })
+  await Promise.all(workers)
+  return results
+}
 const cost = () =>
   (usage.input * PRICE.input + usage.output * PRICE.output + usage.cacheWrite * PRICE.cacheWrite + usage.cacheRead * PRICE.cacheRead) /
   1e6
@@ -170,6 +190,10 @@ const cost = () =>
 async function ask<T extends z.ZodType>(system: string, user: string, schema: T): Promise<z.infer<T> | null> {
   if (values['dry-run']) {
     console.log(`\n--- system ---\n${system}\n\n--- user ---\n${user}\n`)
+    return null
+  }
+  if (cost() > maxUsd) {
+    budgetHit = true
     return null
   }
   const response = await client.beta.messages.parse({
@@ -226,12 +250,26 @@ async function words(): Promise<DraftFile> {
 
   const cards: DraftCard[] = []
   const skipped: string[] = []
-  for (let i = 0; i < list.length; i += batchSize) {
-    const batch = list.slice(i, i + batchSize)
-    console.log(`words ${batch[0].rank}–${batch.at(-1)!.rank} (${batch.length})`)
-    const input = batch.map((l) => ({ lemma: l.lemma, pos: l.pos, gender: l.genders.join('/') || undefined }))
-    const out = await ask(WORD_SYSTEM, JSON.stringify(input, null, 1), WordOutput)
+  const batches: Lemma[][] = []
+  for (let i = 0; i < list.length; i += batchSize) batches.push(list.slice(i, i + batchSize))
+
+  let done = 0
+  const outputs = await pool(
+    batches.map((batch) => async () => {
+      const input = batch.map((l) => ({ lemma: l.lemma, pos: l.pos, gender: l.genders.join('/') || undefined }))
+      const out = await ask(WORD_SYSTEM, JSON.stringify(input, null, 1), WordOutput).catch((e) => {
+        console.warn(`  words ${batch[0].rank}: ${e instanceof Error ? e.message : e}`)
+        return null
+      })
+      console.log(`words ${batch[0].rank}–${batch.at(-1)!.rank} done (${++done}/${batches.length}, $${cost().toFixed(2)})`)
+      return out
+    }),
+    Number(values.concurrency),
+  )
+
+  for (const [b, out] of outputs.entries()) {
     if (!out) continue
+    const batch = batches[b]
     for (const [j, w] of out.cards.entries()) {
       const source: Lemma | undefined = batch.find((l) => l.lemma === w.lemma) ?? batch[j]
       if (w.skip) {
@@ -241,11 +279,11 @@ async function words(): Promise<DraftFile> {
       const issues: string[] = []
       if (source?.pos === 'NOM' && source.genders.length === 1) {
         const article = w.answer.split(/\s|'/)[0].toLowerCase()
-        const expected = source.genders[0] === 'm' ? ['le', 'un', 'les'] : ['la', 'une', 'les']
-        if (!expected.includes(article)) issues.push(`article "${article}" but Lexique gender is ${source.genders[0]}`)
+        const wrong = source.genders[0] === 'm' ? ['la', 'une'] : ['le', 'un']
+        if (wrong.includes(article)) issues.push(`article "${article}" but Lexique gender is ${source.genders[0]}`)
       }
       if (/^l'/i.test(w.answer)) issues.push("answer uses l', gender not visible")
-      if (source && headword(w.answer) !== headword(source.lemma)) issues.push(`answer differs from lemma "${source.lemma}"`)
+      if (source && !sameWord(w.answer, source.lemma)) issues.push(`answer differs from lemma "${source.lemma}"`)
       const card = finish({
         ...clean({ de: w.de, answer: w.answer, accept: w.accept, note: w.note }),
         id: uniqueId(`w-${slug(headword(w.answer))}`),
@@ -262,51 +300,77 @@ async function words(): Promise<DraftFile> {
   return { meta: { mode: 'words', from, count, lemmas: list.map((l) => l.lemma), skipped }, cards }
 }
 
-async function topic(): Promise<DraftFile> {
-  const id = values.topic ?? ''
-  const section = SECTIONS.find((s) => s.topics.some((t) => t.id === id))
+function topicPrompt(id: string, n: number, extra: Card[]): string {
+  const section = SECTIONS.find((sec) => sec.topics.some((t) => t.id === id))
   const title = section?.topics.find((t) => t.id === id)?.title
   if (!section || !title) throw new Error(`Unknown topic "${id}". See src/data/topics.ts`)
   const curriculum = readFileSync(new URL('CURRICULUM.md', root), 'utf8')
-  const description = curriculum.split('\n').find((l) => l.includes(`\`${id}\``))?.replace(/^- `[^`]+`\s*/, '') ?? ''
+  const description =
+    curriculum
+      .split('\n')
+      .find((l) => l.includes(`\`${id}\``))
+      ?.replace(/^- `[^`]+`\s*/, '') ?? ''
+  const existing = [...known, ...extra]
+    .filter((c) => c.topic === id)
+    // Verb-form cards are generated from Lexique; showing hundreds of them wastes context.
+    .filter((c) => c.format !== 'conjugate' || !c.id.startsWith('cj-'))
+    .slice(0, 40)
+    .map(({ id: _id, topic: _t, ...c }) => clean(c as Record<string, unknown>))
 
-  const count = Number(values.count)
-  const batchSize = Math.min(Number(values.batch), 15)
-  const cards: DraftCard[] = []
-  for (let done = 0; done < count; done += batchSize) {
-    const n = Math.min(batchSize, count - done)
-    const existing = [...known, ...cards]
-      .filter((c) => c.topic === id)
-      .map(({ id: _id, topic: _t, ...c }) => clean(c as Record<string, unknown>))
-    const user = `Topic: ${title} (section: ${section.title})
+  return `Topic: ${title} (section: ${section.title})
 What it covers: ${description}
 
 Existing cards for this topic:
 ${JSON.stringify(existing, null, 1)}
 
 Write ${n} new cards for this topic.`
-    console.log(`topic ${id}: ${n} cards`)
-    const out = await ask(TOPIC_SYSTEM, user, TopicOutput)
-    if (!out) continue
-    for (const c of out.cards) {
-      const card = finish({
-        ...clean(c),
-        id: uniqueId(`${id}-${slug(c.answer)}`),
-        topic: id,
-        status: 'draft',
-        issues: [],
-      } as DraftCard)
-      if (card) cards.push(card)
+}
+
+/** One request per topic, run in parallel; results are processed in topic order. */
+async function topics(ids: string[]): Promise<DraftFile> {
+  const per = Number(values.count)
+  const batchSize = Math.min(Number(values.batch), 15)
+  const cards: DraftCard[] = []
+
+  for (let offset = 0; offset < per; offset += batchSize) {
+    const n = Math.min(batchSize, per - offset)
+    let done = 0
+    const outputs = await pool(
+      ids.map((id) => async () => {
+        const out = await ask(TOPIC_SYSTEM, topicPrompt(id, n, cards), TopicOutput).catch((e) => {
+          console.warn(`  ${id}: ${e instanceof Error ? e.message : e}`)
+          return null
+        })
+        console.log(`${id} done (${++done}/${ids.length}, $${cost().toFixed(2)})`)
+        return { id, out }
+      }),
+      Number(values.concurrency),
+    )
+
+    for (const { id, out } of outputs) {
+      if (!out) continue
+      for (const c of out.cards) {
+        const card = finish({
+          ...clean(c),
+          id: uniqueId(`${id}-${slug(c.answer)}`),
+          topic: id,
+          status: 'draft',
+          issues: [],
+        } as DraftCard)
+        if (card) cards.push(card)
+      }
     }
   }
-  return { meta: { mode: 'topic', topic: id, count }, cards }
+  return { meta: { mode: ids.length === 1 ? 'topic' : 'topics', topics: ids, perTopic: per }, cards }
 }
 
 // ---------------------------------------------------------------- run
 
 let result: DraftFile | undefined
 try {
-  result = mode === 'words' ? await words() : await topic()
+  const topicIds = SECTIONS.flatMap((sec) => sec.topics.map((t) => t.id))
+  result =
+    mode === 'words' ? await words() : mode === 'topic' ? await topics([values.topic ?? '']) : await topics(topicIds)
 } catch (error) {
   if (error instanceof Anthropic.AuthenticationError) {
     console.error('Authentication failed. Put a valid ANTHROPIC_API_KEY in .env (see .env.example).')
@@ -322,7 +386,8 @@ try {
 
 if (result && !values['dry-run']) {
   const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')
-  const name = mode === 'words' ? `${stamp}-words-${values.from}.json` : `${stamp}-topic-${values.topic}.json`
+  const name =
+    mode === 'words' ? `${stamp}-words-${values.from}.json` : mode === 'topic' ? `${stamp}-topic-${values.topic}.json` : `${stamp}-topics.json`
   result.meta = { ...result.meta, model: MODEL, created: new Date(), usage, costUSD: Number(cost().toFixed(4)) }
   const path = new URL(name, draftsDir)
   if (existsSync(path)) throw new Error(`${name} exists`)
@@ -330,6 +395,7 @@ if (result && !values['dry-run']) {
   const flagged = result.cards.filter((c) => c.status === 'flagged').length
   console.log(
     `\n${result.cards.length} cards (${flagged} flagged) → pipeline/out/drafts/${name}` +
-      `\ntokens in ${usage.input}, out ${usage.output} · about $${cost().toFixed(2)}`,
+      `\ntokens in ${usage.input}, out ${usage.output} · about $${cost().toFixed(2)}` +
+      (budgetHit ? `\nStopped early: --max-usd ${maxUsd} reached.` : ''),
   )
 }

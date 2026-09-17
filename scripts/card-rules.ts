@@ -78,9 +78,18 @@ export function dedupeKey(c: Card): string {
   return [c.format, de, strip(c.fr ?? ''), strip(c.task ?? ''), strip(c.answer)].join('|')
 }
 
-/** The French headword of a translate card: "la mer" → "mer", "une expérience" → "expérience". */
+/**
+ * The French headword of a translate card: "la mer" → "mer", "une expérience" → "expérience".
+ * The article only counts when it is a separate word, so "lapin" stays "lapin".
+ */
 export function headword(answer: string): string {
   return strip(answer)
     .replace(/œ/g, 'oe')
-    .replace(/^(les|une|le|la|un|l'|se|s')\s*/, '')
+    .replace(/^(?:(?:les|une|le|la|un|se)\s+|(?:l'|s'))/, '')
+}
+
+/** Same word ignoring singular/plural, for comparing an answer with its dictionary lemma. */
+export function sameWord(a: string, b: string): boolean {
+  const base = (s: string) => headword(s).replace(/s$/, '')
+  return base(a) === base(b)
 }
