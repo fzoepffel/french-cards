@@ -29,27 +29,30 @@ export function Mark() {
 
 /** Daily progress as a ring: how much of today's round is behind you. */
 export function Ring({ done, total }: { done: number; total: number }) {
+  // The box is wider than the rings, so the outer rim and its stroke are never clipped.
   const r = 38
   const c = 2 * Math.PI * r
   const share = total ? Math.min(1, done / total) : 1
   return (
-    <svg className="ring" viewBox="0 0 88 88" role="img" aria-label={`${done} von ${total} Karten heute geschafft`}>
-      <circle className="rim" cx="44" cy="44" r={r + 6} fill="none" />
-      <circle className="rim" cx="44" cy="44" r={r - 6} fill="none" />
-      <circle className="track" cx="44" cy="44" r={r} />
-      <circle
-        className="value"
-        cx="44"
-        cy="44"
-        r={r}
-        strokeDasharray={c}
-        strokeDashoffset={c * (1 - share)}
-        transform="rotate(-90 44 44)"
-      />
-      <text x="44" y="46" fontSize="21">
+    <svg className="ring" viewBox="0 0 98 98" role="img" aria-label={`${done} von ${total} Karten heute geschafft`}>
+      <circle className="rim" cx="49" cy="49" r={r + 6} fill="none" />
+      <circle className="rim" cx="49" cy="49" r={r - 6} fill="none" />
+      <circle className="track" cx="49" cy="49" r={r} />
+      {done > 0 && (
+        <circle
+          className="value"
+          cx="49"
+          cy="49"
+          r={r}
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - share)}
+          transform="rotate(-90 49 49)"
+        />
+      )}
+      <text x="49" y="51" fontSize="21">
         {total ? `${done}/${total}` : '✓'}
       </text>
-      <text x="44" y="62" fontSize="9" fill="var(--ink-soft)" style={{ letterSpacing: '0.1em' }}>
+      <text x="49" y="67" fontSize="9" fill="var(--ink-soft)" style={{ letterSpacing: '0.1em' }}>
         HEUTE
       </text>
     </svg>
