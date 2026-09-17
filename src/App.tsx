@@ -14,7 +14,7 @@ import {
 import { check, type Verdict } from './check'
 import { Confirm, type ConfirmProps } from './Confirm'
 import { canSpeak, getAutoSpeak, hasFrenchVoice, setAutoSpeak, speak } from './speak'
-import { Check, Mark, Ring, Seal, SpeakerIcon, Tower } from './Bits'
+import { Burst, Check, Mark, Ring, Seal, SpeakerIcon, Tower } from './Bits'
 import { SECTIONS } from './data/topics'
 import {
   buildQueue,
@@ -228,12 +228,12 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
           Tippe ein Thema an, um nur daraus zu üben. Das Häkchen daneben heißt "kann ich schon" und nimmt das Thema aus
           der Tagesrunde.
         </p>
-        {SECTIONS.map((section) => {
+        {SECTIONS.map((section, i) => {
           const rows = section.topics.map((t) => ({ ...t, p: s?.topics.get(t.id) }))
           const seen = rows.reduce((n, r) => n + (r.p?.seen ?? 0), 0)
           const all = rows.reduce((n, r) => n + (r.p?.total ?? 0), 0)
           return (
-            <details key={section.id} className="section">
+            <details key={section.id} className="section" style={{ ['--accent-c' as string]: SECTION_COLOURS[i % SECTION_COLOURS.length] }}>
               <summary>
                 <span>{section.title}</span>
                 <span className="count">
@@ -425,6 +425,9 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
 }
 
 const ACCENTS = ['é', 'è', 'ê', 'à', 'â', 'ç', 'ù', 'û', 'î', 'ï', 'ô', 'œ', 'ë']
+
+/** One colour per curriculum section, so the list is scannable and a bit livelier. */
+const SECTION_COLOURS = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)']
 
 const AUTO_GRADE: Record<Verdict, Grade> = {
   correct: Rating.Good,
@@ -646,7 +649,12 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
 
       {verdict && (
         <section className="reveal" aria-live="polite">
-          {!selfGraded && <p className={`verdict ${ok ? 'ok' : 'bad'}`}>{VERDICT_TEXT[verdict]}</p>}
+          {!selfGraded && (
+            <p className={`verdict ${ok ? 'ok' : 'bad'}`}>
+              {VERDICT_TEXT[verdict]}
+              {verdict === 'correct' && <Burst />}
+            </p>
+          )}
           {selfGraded && verdict !== 'wrong' && <p className="verdict ok">{VERDICT_TEXT[verdict]}</p>}
           <div className="answer-block">
             {hook && (

@@ -16,6 +16,13 @@ export function Ring({ done, total }: { done: number; total: number }) {
   const share = total ? Math.min(1, done / total) : 1
   return (
     <svg className="ring" viewBox="0 0 88 88" role="img" aria-label={`${done} von ${total} Karten heute geschafft`}>
+      <defs>
+        <linearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="var(--c5)" />
+          <stop offset="55%" stopColor="var(--c1)" />
+          <stop offset="100%" stopColor="var(--c3)" />
+        </linearGradient>
+      </defs>
       <circle className="track" cx="44" cy="44" r={r} />
       <circle
         className="value"
@@ -96,5 +103,34 @@ export function SpeakerIcon() {
       <path d="M13.5 7.5a3.5 3.5 0 0 1 0 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
       <path d="M15.8 5a6.5 6.5 0 0 1 0 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.55" />
     </svg>
+  )
+}
+
+/** A short burst of confetti when an answer is right. Pure CSS, six pieces. */
+export function Burst() {
+  // All pieces fly up and to the right, so they never cross the word itself.
+  const pieces = [
+    { x: 6, y: -34, c: 'var(--c1)', r: -24 },
+    { x: 24, y: -46, c: 'var(--c2)', r: 14 },
+    { x: 44, y: -40, c: 'var(--c5)', r: -8 },
+    { x: 60, y: -24, c: 'var(--c3)', r: 26 },
+    { x: 70, y: -6, c: 'var(--c4)', r: -16 },
+    { x: 34, y: -16, c: 'var(--c6)', r: 20 },
+  ]
+  return (
+    <span className="burst" aria-hidden>
+      {pieces.map((p, i) => (
+        <i
+          key={i}
+          style={{
+            ['--x' as string]: `${p.x}px`,
+            ['--y' as string]: `${p.y}px`,
+            ['--r' as string]: `${p.r}deg`,
+            background: p.c,
+            animationDelay: `${i * 18}ms`,
+          }}
+        />
+      ))}
+    </span>
   )
 }
