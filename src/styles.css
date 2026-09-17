@@ -210,27 +210,33 @@ h2 {
 
 button {
   font: inherit;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.97rem;
   color: var(--ink);
   background: var(--surface);
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  padding: 11px 15px;
+  border-radius: 14px;
+  padding: 13px 18px;
+  min-height: 46px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 1px 1px rgba(27, 29, 38, 0.04);
   transition:
-    transform 0.12s ease,
-    box-shadow 0.15s ease,
+    transform 0.09s ease,
+    box-shadow 0.12s ease,
     background 0.15s ease,
-    border-color 0.15s ease;
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 button:hover:not(:disabled) {
   border-color: var(--navy-soft);
 }
 
+/* Pressed state: the surface sinks rather than shrinking */
 button:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 button:focus-visible {
@@ -239,7 +245,7 @@ button:focus-visible {
 }
 
 button:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: default;
 }
 
@@ -247,8 +253,10 @@ button.primary {
   background: var(--navy);
   color: var(--on-navy);
   border-color: var(--navy);
-  font-weight: 600;
-  box-shadow: var(--shadow-1);
+  /* a darker lip along the bottom edge gives the button physical weight */
+  box-shadow:
+    inset 0 -2px 0 rgba(0, 0, 0, 0.22),
+    0 2px 6px rgba(33, 53, 107, 0.22);
 }
 
 button.primary:hover:not(:disabled) {
@@ -256,11 +264,16 @@ button.primary:hover:not(:disabled) {
   border-color: var(--navy-soft);
 }
 
+button.primary:active:not(:disabled) {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.22);
+}
+
 button.big {
   width: 100%;
-  padding: 17px;
+  padding: 18px;
+  min-height: 58px;
   font-size: 1.05rem;
-  border-radius: var(--radius);
+  border-radius: 16px;
 }
 
 /* "Weiß ich nicht" should not look like the main action */
@@ -275,29 +288,61 @@ button.big.quiet {
 button.link {
   background: none;
   border: none;
-  padding: 4px 0;
+  box-shadow: none;
+  padding: 6px 0;
+  min-height: 0;
   color: var(--ink-soft);
   font-weight: 500;
+  font-size: 0.92rem;
 }
 
 button.link:hover {
   color: var(--ink);
 }
 
+/* Square icon button, e.g. marking a topic as known */
+button.icon {
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--ink-soft);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+button.icon:hover:not(:disabled) {
+  background: var(--paper-2);
+  border-color: var(--line);
+}
+
+button.icon[aria-pressed='true'] {
+  color: var(--brass);
+  background: color-mix(in srgb, var(--brass) 14%, transparent);
+  border-color: transparent;
+}
+
 button.danger {
   background: var(--rouge);
   border-color: var(--rouge);
   color: var(--on-navy);
-  font-weight: 600;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.2);
 }
 
 button.danger-link {
   background: none;
   border: none;
+  box-shadow: none;
   color: var(--rouge);
-  padding: 4px 0;
+  padding: 6px 0;
+  min-height: 0;
   text-decoration: underline;
   font-size: 0.9rem;
+  font-weight: 500;
 }
 
 /* ---------------------------------------------------------------- home */
@@ -473,35 +518,48 @@ button.danger-link {
 }
 
 .section li {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  grid-template-areas:
-    'info info info'
-    'meta skip practice';
-  gap: 8px 10px;
-  padding: 11px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   border-top: 1px solid var(--line);
 }
 
-.topic-info {
-  grid-area: info;
+.topic-main {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  align-items: stretch;
+  gap: 7px;
+  text-align: left;
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 12px;
+  padding: 13px 8px 13px 0;
+  font-weight: 500;
   min-width: 0;
 }
 
-.section li .count {
-  grid-area: meta;
-  align-self: center;
+.topic-main:hover:not(:disabled) {
+  background: var(--paper-2);
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
-.section li .skip {
-  grid-area: skip;
+.topic-main:disabled {
+  opacity: 1;
+  color: var(--ink-soft);
 }
 
-.section li > button:last-child {
-  grid-area: practice;
+.topic-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.topic-head .count {
+  flex: none;
 }
 
 .bar {
@@ -520,21 +578,8 @@ button.danger-link {
   transition: width 0.5s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
-.section li button {
-  padding: 7px 12px;
-  font-size: 0.88rem;
-  border-radius: 999px;
-}
-
-button.skip {
-  color: var(--ink-soft);
-  background: transparent;
-  border-color: var(--line);
-}
-
-button.skip[aria-pressed='true'] {
-  border-color: var(--brass);
-  color: var(--brass);
+.bar.done span {
+  background: linear-gradient(to right, var(--vert), var(--vert));
 }
 
 /* ---------------------------------------------------------------- settings */
@@ -1051,4 +1096,72 @@ button.skip[aria-pressed='true'] {
   background: var(--navy);
   color: var(--on-navy);
   font-weight: 600;
+}
+
+/* Eiffel tower: each group draws itself in sequence */
+.tower {
+  display: block;
+  margin: 0 auto;
+  color: var(--navy);
+}
+
+.tower .draw {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: draw 1.1s ease forwards;
+}
+
+.tower .d1 { animation-delay: 0.05s; }
+.tower .d2 { animation-delay: 0.45s; }
+.tower .d3 { animation-delay: 0.65s; }
+.tower .d4 { animation-delay: 0.85s; }
+.tower .d5 { animation-delay: 1s; }
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.rest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 4px;
+  color: var(--ink-soft);
+}
+
+/* Picture hook and gender colour on the answer side */
+.answer-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hook {
+  font-size: 2.6rem;
+  line-height: 1;
+  filter: saturate(0.92);
+  animation: pop 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.gender {
+  font-weight: 600;
+}
+
+.gender.m {
+  color: var(--navy);
+}
+
+.gender.f {
+  color: var(--rouge);
+}
+
+.parfait {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  color: var(--brass);
+  letter-spacing: 0.04em;
+  margin: 0;
 }

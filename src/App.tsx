@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Rating, type Grade } from 'ts-fsrs'
-import { CARDS, FORMAT_LABEL, acceptedAnswers, solution, topicTitle, type StudyCard } from './cards'
+import {
+  CARDS,
+  FORMAT_LABEL,
+  acceptedAnswers,
+  genderOf,
+  hookFor,
+  solution,
+  splitArticle,
+  topicTitle,
+  type StudyCard,
+} from './cards'
 import { check, type Verdict } from './check'
 import { Confirm, type ConfirmProps } from './Confirm'
-import { Mark, Ring, Seal } from './Bits'
+import { Check, Mark, Ring, Seal, Tower } from './Bits'
 import { SECTIONS } from './data/topics'
 import {
   buildQueue,
@@ -187,11 +197,16 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
       <button className="primary big" disabled={!total} onClick={() => start()}>
         {total ? `Heutige Runde starten (${total} Karten)` : 'Heute schon erledigt'}
       </button>
-      <p className="small center">
-        {total
-          ? 'Du tippst die französische Antwort. Falsche Karten kommen am Ende der Runde noch einmal.'
-          : 'Morgen sind die nächsten Karten dran. Du kannst unten ein einzelnes Thema üben.'}
-      </p>
+      {total ? (
+        <p className="small center">
+          Du tippst die französische Antwort. Falsche Karten kommen am Ende der Runde noch einmal.
+        </p>
+      ) : (
+        <div className="rest">
+          <Tower size={78} />
+          <p className="small center">Für heute fertig. Morgen sind die nächsten Karten dran.</p>
+        </div>
+      )}
 
       {!skip.placed && (
         <button className="invite" onClick={onPlacement}>
@@ -208,8 +223,8 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
           Themen <span className="count">{s ? `${s.learned} von ${s.total} Karten schon gesehen` : ''}</span>
         </h2>
         <p className="small">
-          Die Zahlen zeigen gesehene Karten von allen Karten des Themas. "Üben" nimmt nur dieses Thema dran, auch
-          außerhalb der Tagesrunde.
+          Tippe ein Thema an, um nur daraus zu üben. Das Häkchen daneben heißt "kann ich schon" und nimmt das Thema aus
+          der Tagesrunde.
         </p>
         {SECTIONS.map((section) => {
           const rows = section.topics.map((t) => ({ ...t, p: s?.topics.get(t.id) }))
@@ -224,36 +239,44 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
                 </span>
               </summary>
               <ul>
-                {rows.map((r) => (
-                  <li key={r.id}>
-                    <div className="topic-info">
-                      <span>{r.title}</span>
-                      <span className="bar" aria-hidden>
-                        <span style={{ width: `${r.p?.total ? (100 * r.p.seen) / r.p.total : 0}%` }} />
-                      </span>
-                    </div>
-                    <span className="count">
-                      {r.p?.seen ?? 0}/{r.p?.total ?? 0}
-                      {r.p?.due ? ` · ${r.p.due} fällig` : ''}
-                    </span>
-                    <button
-                      className="skip"
-                      aria-pressed={skip.topics.includes(r.id)}
-                      onClick={() => skipTopic(r.id, r.title)}
-                    >
-                      {skip.topics.includes(r.id) ? 'wieder aufnehmen' : 'kann ich schon'}
-                    </button>
-                    {(() => {
-                      const empty = !r.p || r.p.total === 0
-                      const finishedForNow = !empty && r.p!.due === 0 && r.p!.seen === r.p!.total
-                      return (
-                        <button disabled={empty || finishedForNow} onClick={() => start(r.id)}>
-                          {finishedForNow ? 'alles dran' : 'Üben'}
-                        </button>
-                      )
-                    })()}
-                  </li>
-                ))}
+                {rows.map((r) => {
+                  const p = r.p
+                  const empty = !p || p.total === 0
+                  const complete = !empty && p.due === 0 && p.seen === p.total
+                  const skipped = skip.topics.includes(r.id)
+                  return (
+                    <li key={r.id}>
+                      <button
+                        className="topic-main"
+                        disabled={empty || complete || skipped}
+                        onClick={() => start(r.id)}
+                        aria-label={`${r.title} üben`}
+                      >
+                        <span className="topic-head">
+                          <span>{r.title}</span>
+                          <span className="count">
+                            {skipped
+                              ? 'übersprungen'
+                              : complete
+                                ? 'alles dran'
+                                : `${p?.seen ?? 0}/${p?.total ?? 0}${p?.due ? ` · ${p.due} fällig` : ''}`}
+                          </span>
+                        </span>
+                        <span className={`bar ${complete ? 'done' : ''}`} aria-hidden>
+                          <span style={{ width: `${p?.total ? (100 * p.seen) / p.total : 0}%` }} />
+                        </span>
+                      </button>
+                      <button
+                        className="icon"
+                        aria-pressed={skipped}
+                        aria-label={skipped ? `${r.title} wieder aufnehmen` : `${r.title} kann ich schon`}
+                        onClick={() => skipTopic(r.id, r.title)}
+                      >
+                        <Check />
+                      </button>
+                    </li>
+                  )
+                })}
               </ul>
             </details>
           )
@@ -401,6 +424,18 @@ const PLACEHOLDER: Partial<Record<StudyCard['format'], string>> = {
   conjugate: 'Verbform',
 }
 
+/** Shows "la mer" with the article in the gender's colour: navy for m, rouge for f. */
+function Gendered({ answer }: { answer: string }) {
+  const [article, rest] = splitArticle(answer)
+  const gender = genderOf(answer)
+  if (!article || !gender) return <>{answer}</>
+  return (
+    <>
+      <span className={`gender ${gender}`}>{article.trim()}</span> {rest}
+    </>
+  )
+}
+
 function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r: SessionResult) => void }) {
   const [queue, setQueue] = useState(initial)
   const card = queue[0]
@@ -485,6 +520,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   }
 
   const ok = verdict === 'correct' || verdict === 'typo'
+  const hook = hookFor(card)
   const showSource = card.format === 'rewrite' || (card.fr && !card.fr.includes('___') && card.format !== 'fix')
 
   return (
@@ -584,9 +620,16 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
         <section className="reveal" aria-live="polite">
           {!selfGraded && <p className={`verdict ${ok ? 'ok' : 'bad'}`}>{VERDICT_TEXT[verdict]}</p>}
           {selfGraded && verdict !== 'wrong' && <p className="verdict ok">{VERDICT_TEXT[verdict]}</p>}
-          <p className="solution" lang="fr">
-            {solution(card)}
-          </p>
+          <div className="answer-block">
+            {hook && (
+              <span className="hook" aria-hidden>
+                {hook}
+              </span>
+            )}
+            <p className="solution" lang="fr">
+              {card.format === 'translate' ? <Gendered answer={card.answer} /> : solution(card)}
+            </p>
+          </div>
           {verdict === 'accent' && <p className="small">Akzente zählen als Fehler, sie verändern die Aussprache.</p>}
           {verdict === 'typo' && <p className="small">Ein Buchstabe daneben. Zählt als gewusst, kommt aber früher wieder.</p>}
           {card.note && <p className="note">{card.note}</p>}
@@ -814,6 +857,7 @@ function Placement({ onDone }: { onDone: () => void }) {
 }
 
 function Done({ result, onHome }: { result: SessionResult; onHome: () => void }) {
+  const perfect = result.reviewed > 0 && result.right === result.reviewed
   const [tomorrow, setTomorrow] = useState<number | null>(null)
   useEffect(() => {
     dueTomorrow().then(setTomorrow)
@@ -822,12 +866,16 @@ function Done({ result, onHome }: { result: SessionResult; onHome: () => void })
   return (
     <main className="done">
       <h1 className="center">Runde fertig</h1>
-      <Seal
-        score={result.right === result.reviewed ? `${result.reviewed}/${result.reviewed}` : `${result.right}/${result.reviewed}`}
-        perfect={result.right === result.reviewed}
-      />
+      {perfect ? (
+        <div className="rest">
+          <Tower size={104} />
+          <p className="parfait">Parfait</p>
+        </div>
+      ) : (
+        <Seal score={`${result.right}/${result.reviewed}`} perfect={false} />
+      )}
       <p className="score">
-        {result.right === result.reviewed ? 'Alles richtig. Sehr stark.' : 'Die verpassten Karten kommen morgen wieder.'}
+        {perfect ? 'Alles richtig.' : `${result.right} von ${result.reviewed} richtig`}
       </p>
       {tomorrow !== null && (
         <p className="small center">
