@@ -87,3 +87,14 @@ export function Tower({ size = 120 }: { size?: number }) {
     </svg>
   )
 }
+
+/** Speaker icon for the pronunciation button. */
+export function SpeakerIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path d="M4 7.5h3L11 4v12L7 12.5H4z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M13.5 7.5a3.5 3.5 0 0 1 0 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M15.8 5a6.5 6.5 0 0 1 0 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.55" />
+    </svg>
+  )
+}

@@ -13,7 +13,8 @@ import {
 } from './cards'
 import { check, type Verdict } from './check'
 import { Confirm, type ConfirmProps } from './Confirm'
-import { Check, Mark, Ring, Seal, Tower } from './Bits'
+import { canSpeak, getAutoSpeak, hasFrenchVoice, setAutoSpeak, speak } from './speak'
+import { Check, Mark, Ring, Seal, SpeakerIcon, Tower } from './Bits'
 import { SECTIONS } from './data/topics'
 import {
   buildQueue,
@@ -80,6 +81,7 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
   const [undo, setUndo] = useState<{ text: string; run: () => void } | null>(null)
   const [days, setDays] = useState(0)
   const [theme, setTheme] = useState<Theme>(getTheme)
+  const [autoSpeak, setAuto] = useState(getAutoSpeak)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const refresh = useCallback(() => {
@@ -333,6 +335,27 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
             Übersprungene Wörter zurückholen
           </button>
         )}
+        {canSpeak() && (
+          <>
+            <label className="row">
+              <span>Aussprache automatisch</span>
+              <input
+                type="checkbox"
+                className="switch"
+                checked={autoSpeak}
+                onChange={(e) => {
+                  setAutoSpeak(e.target.checked)
+                  setAuto(e.target.checked)
+                  if (e.target.checked) speak('Bonjour')
+                }}
+              />
+            </label>
+            <p className="small">
+              Die Stimme kommt vom Gerät, es wird nichts heruntergeladen.
+              {!hasFrenchVoice() && ' Auf diesem Gerät ist noch keine französische Stimme installiert.'}
+            </p>
+          </>
+        )}
         <div className="row">
           <span>Aussehen</span>
           <div className="segmented" role="group" aria-label="Aussehen">
@@ -521,6 +544,11 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
 
   const ok = verdict === 'correct' || verdict === 'typo'
   const hook = hookFor(card)
+  const spoken = solution(card)
+
+  useEffect(() => {
+    if (verdict && getAutoSpeak()) speak(spoken)
+  }, [verdict, spoken])
   const showSource = card.format === 'rewrite' || (card.fr && !card.fr.includes('___') && card.format !== 'fix')
 
   return (
@@ -627,8 +655,13 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
               </span>
             )}
             <p className="solution" lang="fr">
-              {card.format === 'translate' ? <Gendered answer={card.answer} /> : solution(card)}
+              {card.format === 'translate' ? <Gendered answer={card.answer} /> : spoken}
             </p>
+            {canSpeak() && (
+              <button className="icon speak" onClick={() => speak(spoken)} aria-label="Aussprache anhören">
+                <SpeakerIcon />
+              </button>
+            )}
           </div>
           {verdict === 'accent' && <p className="small">Akzente zählen als Fehler, sie verändern die Aussprache.</p>}
           {verdict === 'typo' && <p className="small">Ein Buchstabe daneben. Zählt als gewusst, kommt aber früher wieder.</p>}
