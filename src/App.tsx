@@ -565,9 +565,6 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
           noch {queue.length} {queue.length === 1 ? 'Karte' : 'Karten'}
         </span>
       </div>
-      <div className="session-bar" aria-hidden>
-        <span style={{ width: `${(100 * result.current.reviewed) / (result.current.reviewed + queue.length)}%` }} />
-      </div>
 
       <article className="card">
         <span className="tag">
