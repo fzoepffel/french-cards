@@ -1,1 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#21356b"/><g transform="rotate(-8 50 50)"><rect x="26" y="20" width="52" height="60" rx="7" fill="#f3ece1"/></g><rect x="22" y="22" width="52" height="60" rx="7" fill="#faf6ef"/><rect x="22" y="22" width="3.5" height="60" fill="#21356b"/><rect x="70.5" y="22" width="3.5" height="60" fill="#b93a32"/><text x="48" y="64" font-family="Georgia,serif" font-weight="bold" font-size="34" text-anchor="middle" fill="#b58a3a">é</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Neno">
+  <rect width="512" height="512" rx="115" fill="#e8552f"/>
+  <g stroke="#2e211c" stroke-width="20" stroke-linejoin="round">
+    <rect x="108" y="140" width="186" height="248" rx="34" fill="#ce2a63" transform="rotate(-9 201 264)"/>
+    <rect x="188" y="118" width="212" height="272" rx="36" fill="#f7f1e8" transform="rotate(4 294 254)"/>
+    <path d="M294 196c-49 0-89 31-89 69 0 23 14 43 36 56l-11 33 41-24c7 1 15 2 23 2 49 0 89-30 89-67s-40-69-89-69z" fill="#f5a623"/>
+  </g>
+  <g fill="#2e211c">
+    <circle cx="258" cy="264" r="15"/>
+    <circle cx="300" cy="264" r="15"/>
+    <circle cx="342" cy="264" r="15"/>
+  </g>
+  <g stroke="#ffc247" stroke-width="17" stroke-linecap="round">
+    <path d="M400 118v-34"/>
+    <path d="M428 140l24-24"/>
+    <path d="M440 180h34"/>
+  </g>
+</svg>

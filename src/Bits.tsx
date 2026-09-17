@@ -1,11 +1,29 @@
 /** Small presentational pieces shared across the screens. */
 
-/** The app mark: a card corner with an accented é. */
+/** The app mark: the two cards and speech bubble from the icon. */
 export function Mark() {
   return (
-    <span className="mark" aria-hidden>
-      é
-    </span>
+    <svg className="mark" viewBox="0 0 512 512" role="img" aria-label="Neno">
+      <rect width="512" height="512" rx="115" fill="var(--primary)" />
+      <g stroke="var(--outline)" strokeWidth="20" strokeLinejoin="round">
+        <rect x="108" y="140" width="186" height="248" rx="34" fill="var(--accent)" transform="rotate(-9 201 264)" />
+        <rect x="188" y="118" width="212" height="272" rx="36" fill="#f7f1e8" transform="rotate(4 294 254)" />
+        <path
+          d="M294 196c-49 0-89 31-89 69 0 23 14 43 36 56l-11 33 41-24c7 1 15 2 23 2 49 0 89-30 89-67s-40-69-89-69z"
+          fill="var(--gold)"
+        />
+      </g>
+      <g fill="var(--outline)">
+        <circle cx="258" cy="264" r="15" />
+        <circle cx="300" cy="264" r="15" />
+        <circle cx="342" cy="264" r="15" />
+      </g>
+      <g stroke="var(--gold)" strokeWidth="17" strokeLinecap="round">
+        <path d="M400 118v-34" />
+        <path d="M428 140l24-24" />
+        <path d="M440 180h34" />
+      </g>
+    </svg>
   )
 }
 
@@ -16,13 +34,8 @@ export function Ring({ done, total }: { done: number; total: number }) {
   const share = total ? Math.min(1, done / total) : 1
   return (
     <svg className="ring" viewBox="0 0 88 88" role="img" aria-label={`${done} von ${total} Karten heute geschafft`}>
-      <defs>
-        <linearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="var(--c5)" />
-          <stop offset="55%" stopColor="var(--c1)" />
-          <stop offset="100%" stopColor="var(--c3)" />
-        </linearGradient>
-      </defs>
+      <circle className="rim" cx="44" cy="44" r={r + 6} fill="none" />
+      <circle className="rim" cx="44" cy="44" r={r - 6} fill="none" />
       <circle className="track" cx="44" cy="44" r={r} />
       <circle
         className="value"
@@ -33,28 +46,30 @@ export function Ring({ done, total }: { done: number; total: number }) {
         strokeDashoffset={c * (1 - share)}
         transform="rotate(-90 44 44)"
       />
-      <text x="44" y="46" fontSize="20">
+      <text x="44" y="46" fontSize="21">
         {total ? `${done}/${total}` : '✓'}
       </text>
-      <text x="44" y="62" fontSize="9" fill="currentColor" opacity="0.6" style={{ letterSpacing: '0.1em' }}>
+      <text x="44" y="62" fontSize="9" fill="var(--ink-soft)" style={{ letterSpacing: '0.1em' }}>
         HEUTE
       </text>
     </svg>
   )
 }
 
-/** A medallion with the score and a tricolore ribbon, for the end of a round. */
+/** A sticker medal with the score, for the end of a round. */
 export function Seal({ score, perfect }: { score: string; perfect: boolean }) {
   return (
     <svg className="seal" width="150" height="168" viewBox="0 0 150 168" role="img" aria-label={`Ergebnis ${score}`}>
-      <path d="M58 104 L44 160 L64 146 L75 164 L75 104Z" fill="var(--primary)" />
-      <path d="M92 104 L106 160 L86 146 L75 164 L75 104Z" fill="var(--accent)" />
-      <circle cx="75" cy="68" r="54" fill="var(--surface)" stroke="var(--gold)" strokeWidth="2" />
-      <circle cx="75" cy="68" r="46" fill="none" stroke="var(--gold)" strokeWidth="1" strokeDasharray="1.5 5" opacity="0.7" />
-      <text x="75" y="70" textAnchor="middle" dominantBaseline="middle" fontFamily="ui-serif, Georgia, serif" fontSize="34" fill="var(--ink)">
+      <g stroke="var(--outline)" strokeWidth="5" strokeLinejoin="round">
+        <path d="M58 104 L44 160 L64 146 L75 164 L75 104Z" fill="var(--primary)" />
+        <path d="M92 104 L106 160 L86 146 L75 164 L75 104Z" fill="var(--accent)" />
+        <circle cx="75" cy="66" r="54" fill="var(--gold)" />
+        <circle cx="75" cy="66" r="42" fill="var(--surface)" />
+      </g>
+      <text x="75" y="68" textAnchor="middle" dominantBaseline="middle" fontSize="32" fontWeight="800" fill="var(--ink)">
         {score}
       </text>
-      <text x="75" y="95" textAnchor="middle" fontSize="8.5" fill="var(--gold)" letterSpacing="2">
+      <text x="75" y="92" textAnchor="middle" fontSize="9" fontWeight="800" fill="var(--ink-soft)" letterSpacing="1.5">
         {perfect ? 'PARFAIT' : 'RICHTIG'}
       </text>
     </svg>
@@ -65,7 +80,7 @@ export function Seal({ score, perfect }: { score: string; perfect: boolean }) {
 export function Check() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <path d="M4 10.5 8 14.5 16 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 10.5 8 14.5 16 5.5" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
@@ -77,7 +92,7 @@ export function Check() {
 export function Tower({ size = 120 }: { size?: number }) {
   return (
     <svg className="tower" width={size} height={size * 1.6} viewBox="0 0 100 160" fill="none" aria-hidden>
-      <g stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <g stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
         {/* legs */}
         <path className="draw d1" d="M14 150 C28 110 42 74 50 12" />
         <path className="draw d1" d="M86 150 C72 110 58 74 50 12" />
@@ -99,9 +114,9 @@ export function Tower({ size = 120 }: { size?: number }) {
 export function SpeakerIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <path d="M4 7.5h3L11 4v12L7 12.5H4z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-      <path d="M13.5 7.5a3.5 3.5 0 0 1 0 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M15.8 5a6.5 6.5 0 0 1 0 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.55" />
+      <path d="M4 7.5h3L11 4v12L7 12.5H4z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
+      <path d="M13.5 7.5a3.5 3.5 0 0 1 0 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M15.8 5a6.5 6.5 0 0 1 0 10" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" opacity="0.55" />
     </svg>
   )
 }

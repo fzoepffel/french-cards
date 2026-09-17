@@ -23,14 +23,11 @@ import {
   getSkip,
   grade,
   importBackup,
-  applyPalette,
   applyTheme,
   cardsInTopic,
   dueTomorrow,
-  getPalette,
   getTheme,
   streak,
-  PALETTES,
   placementBands,
   preview,
   resetProgress,
@@ -41,7 +38,6 @@ import {
   wordsUpToRank,
   type Band,
   type Limits,
-  type Palette,
   type Theme,
   type SkipSettings,
   type Stats,
@@ -86,7 +82,6 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
   const [days, setDays] = useState(0)
   const [theme, setTheme] = useState<Theme>(getTheme)
   const [autoSpeak, setAuto] = useState(getAutoSpeak)
-  const [palette, setPalette] = useState<Palette>(getPalette)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const refresh = useCallback(() => {
@@ -362,24 +357,6 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
           </>
         )}
         <div className="row">
-          <span>Farbe</span>
-          <div className="swatches" role="group" aria-label="Farbe">
-            {PALETTES.map((p) => (
-              <button
-                key={p.id}
-                className={`swatch ${p.id}`}
-                aria-pressed={palette === p.id}
-                aria-label={p.label}
-                title={p.label}
-                onClick={() => {
-                  setPalette(p.id)
-                  applyPalette(p.id)
-                }}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="row">
           <span>Aussehen</span>
           <div className="segmented" role="group" aria-label="Aussehen">
             {(['system', 'light', 'dark'] as Theme[]).map((t) => (
@@ -597,14 +574,20 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
         </span>
         {card.format === 'conjugate' ? (
           <>
-            <p className="prompt" lang="fr">
-              {card.task}
-            </p>
+            <div className="bubble">
+              <p className="prompt" lang="fr">
+                {card.task}
+              </p>
+            </div>
             {card.de && <p className="hint">{card.de}</p>}
           </>
         ) : (
           <>
-            {card.de && <p className="prompt">{card.de}</p>}
+            {card.de && (
+              <div className="bubble">
+                <p className="prompt">{card.de}</p>
+              </div>
+            )}
             {card.fr?.includes('___') && (
               <p className="cloze" lang="fr">
                 {card.fr}
@@ -870,7 +853,9 @@ function Placement({ onDone }: { onDone: () => void }) {
 
       <article className="card">
         <span className="tag">Einstufung · Übersetzen</span>
-        <p className="prompt">{card.de}</p>
+        <div className="bubble">
+          <p className="prompt">{card.de}</p>
+        </div>
       </article>
 
       <input
