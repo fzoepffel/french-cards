@@ -1,0 +1,194 @@
+[
+  { "id": "w-courage", "topic": "genus-endung", "format": "translate", "de": "der Mut", "answer": "le courage", "note": "Maskulin. Wörter auf -age sind fast immer maskulin: le voyage, le fromage. Ausnahmen: la page, la plage, l'image (f)." },
+  { "id": "w-probleme", "topic": "genus-endung", "format": "translate", "de": "das Problem", "answer": "le problème", "note": "Maskulin trotz -e am Ende. Wörter griechischen Ursprungs auf -ème sind maskulin: le système, le thème." },
+  { "id": "w-experience", "topic": "genus-endung", "format": "translate", "de": "eine Erfahrung", "answer": "une expérience", "note": "Wörter auf -ence und -ance sind feminin. Mit unbestimmtem Artikel, weil l'expérience das Genus nicht zeigt. Ausnahme: le silence." },
+
+  { "id": "w-mer", "topic": "genus-anders", "format": "translate", "de": "das Meer", "answer": "la mer", "note": "Feminin, im Deutschen neutral." },
+  { "id": "w-lait", "topic": "genus-anders", "format": "translate", "de": "die Milch", "answer": "le lait", "note": "Maskulin, anders als die Milch." },
+  { "id": "w-dent", "topic": "genus-anders", "format": "translate", "de": "der Zahn", "answer": "la dent", "note": "Feminin, anders als der Zahn." },
+  { "id": "w-pont", "topic": "genus-anders", "format": "translate", "de": "die Brücke", "answer": "le pont", "note": "Maskulin, anders als die Brücke." },
+  { "id": "w-chaise", "topic": "genus-anders", "format": "translate", "de": "der Stuhl", "answer": "la chaise", "note": "Feminin, anders als der Stuhl." },
+
+  { "id": "w-page", "topic": "genus-bedeutung", "format": "translate", "de": "die Seite (im Buch)", "answer": "la page", "note": "Feminin. Vorsicht: le page ist der Page (junger Diener)." },
+  { "id": "gb-livre", "topic": "genus-bedeutung", "format": "choose", "de": "Ich habe ein Buch gekauft.", "fr": "J'ai acheté ___ livre.", "options": ["un", "une"], "answer": "un", "note": "le livre = das Buch. la livre = das Pfund (Gewicht und britische Währung)." },
+
+  { "id": "pl-travaux", "topic": "plural", "format": "gap", "de": "Die Bauarbeiten dauern drei Monate.", "fr": "Les ___ durent trois mois.", "hint": "travail, Plural", "answer": "travaux", "note": "Normalerweise -ail → -ails (les détails), aber travail → travaux, vitrail → vitraux." },
+  { "id": "pl-yeux", "topic": "plural", "format": "translate", "de": "die Augen", "answer": "les yeux", "note": "l'œil, les yeux. Einer der wenigen komplett unregelmäßigen Plurale." },
+
+  { "id": "art-pas-de", "topic": "artikel", "format": "gap", "de": "Ich trinke keinen Kaffee.", "fr": "Je ne bois pas ___ café.", "answer": "de", "note": "Nach Verneinung werden du, de la, des und un, une zu de. Ausnahme bei être: Ce n'est pas du café." },
+  { "id": "art-de-bons", "topic": "artikel", "format": "choose", "de": "Ich habe gute Freunde.", "fr": "J'ai ___ bons amis.", "options": ["des", "de"], "answer": "de", "note": "Vor einem vorangestellten Adjektiv im Plural wird des zu de. Gesprochen hört man oft auch des." },
+
+  { "id": "pf-boulangere", "topic": "personen-feminin", "format": "translate", "de": "eine Bäckerin", "answer": "une boulangère", "note": "-er → -ère: boulanger, boulangère; infirmier, infirmière." },
+
+  { "id": "af-vieil", "topic": "adj-feminin", "format": "gap", "de": "ein altes Hotel", "fr": "un ___ hôtel", "hint": "vieux", "answer": "vieil", "note": "Vor Vokal oder stummem h im Maskulin: vieil, bel, nouvel. Feminin: vieille, belle, nouvelle." },
+  { "id": "af-seche", "topic": "adj-feminin", "format": "gap", "de": "Die Haut ist trocken.", "fr": "La peau est ___.", "hint": "sec", "answer": "sèche", "note": "sec → sèche. Ähnlich: frais → fraîche, blanc → blanche." },
+
+  { "id": "as-ancien", "topic": "adj-stellung", "format": "choose", "de": "mein ehemaliger Chef", "fr": "mon ___", "options": ["ancien patron", "patron ancien"], "answer": "ancien patron", "note": "ancien vor dem Nomen = ehemalig. Nach dem Nomen = alt: une maison ancienne." },
+
+  { "id": "vg-mieux", "topic": "vergleich", "format": "choose", "de": "Sie singt besser als ich.", "fr": "Elle chante ___ que moi.", "options": ["meilleur", "mieux"], "answer": "mieux", "note": "mieux ist Adverb (wie man etwas tut). meilleur ist Adjektiv (wie etwas ist): une meilleure chanteuse." },
+
+  { "id": "adv-evidemment", "topic": "adverb-ment", "format": "gap", "de": "Offensichtlich hat er recht.", "fr": "___, il a raison.", "hint": "évident → Adverb", "answer": "Évidemment", "note": "-ent → -emment, -ant → -amment: constant → constamment. Beide werden [amɑ̃] gesprochen." },
+
+  { "id": "op-vue", "topic": "objektpronomen", "format": "rewrite", "fr": "J'ai vu Marie hier.", "task": "Ersetze Marie durch ein Pronomen.", "answer": "Je l'ai vue hier.", "note": "Das Pronomen steht vor dem Hilfsverb. Das Partizip richtet sich nach dem vorangestellten direkten Objekt: vue." },
+  { "id": "op-le-lui", "topic": "objektpronomen", "format": "gap", "de": "Ich gebe es ihm.", "fr": "Je ___ donne.", "answer": "le lui", "note": "Reihenfolge: me/te/se/nous/vous, dann le/la/les, dann lui/leur, dann y, dann en." },
+  { "id": "op-aider", "topic": "objektpronomen", "format": "fix", "fr": "Je lui aide.", "answer": "Je l'aide.", "note": "aider qn hat ein direktes Objekt, anders als jemandem helfen." },
+
+  { "id": "fn-y", "topic": "y-en", "format": "gap", "de": "Fährst du nach Paris? Ja, ich fahre morgen hin.", "fr": "Tu vas à Paris ? Oui, j'___ vais demain.", "answer": "y", "note": "y ersetzt à + Ort (dorthin, dort) und à + Sache (daran, darauf): J'y pense." },
+  { "id": "fn-en", "topic": "y-en", "format": "gap", "de": "Willst du Brot? Ja, ich will welches.", "fr": "Tu veux du pain ? Oui, j'___ veux.", "answer": "en", "note": "en ersetzt de + Sache und Mengen (davon, welches). Deutsch lässt es oft weg, Französisch nie." },
+  { "id": "s-envie", "topic": "y-en", "format": "sentence", "de": "Ich habe keine Lust mehr darauf.", "answer": "Je n'en ai plus envie.", "note": "avoir envie de qc, also ersetzt en das darauf. ne … plus = nicht mehr." },
+
+  { "id": "bt-moi", "topic": "betont", "format": "gap", "de": "Kommst du zu mir?", "fr": "Tu viens chez ___ ?", "answer": "moi", "note": "Nach Präpositionen stehen die betonten Formen: chez moi, avec toi, pour lui, sans elle." },
+
+  { "id": "fn-dont", "topic": "relativ", "format": "gap", "de": "Der Mann, dessen Auto gestohlen wurde.", "fr": "L'homme ___ la voiture a été volée.", "answer": "dont", "note": "dont ersetzt de + Nomen: dessen, deren, wovon, von dem. Auch: le livre dont j'ai besoin." },
+  { "id": "fn-ce-qui", "topic": "relativ", "format": "gap", "de": "Was mich interessiert, ist Geschichte.", "fr": "___ m'intéresse, c'est l'histoire.", "answer": "Ce qui", "note": "ce qui ist Subjekt, danach kommt direkt das Verb. ce que ist Objekt, danach kommt ein Subjekt: Ce que je veux, c'est partir." },
+  { "id": "rel-ou", "topic": "relativ", "format": "choose", "de": "das Haus, in dem ich wohne", "fr": "la maison ___ j'habite", "options": ["où", "que", "dont"], "answer": "où", "note": "où steht für Ort und auch für Zeit: le jour où je suis né." },
+  { "id": "rel-lequel", "topic": "relativ", "format": "gap", "de": "der Stift, mit dem ich schreibe", "fr": "le stylo avec ___ j'écris", "answer": "lequel", "note": "Nach Präpositionen steht lequel/laquelle/lesquels. Mit à und de verschmolzen: auquel, duquel." },
+
+  { "id": "fn-vos", "topic": "possessiv-demonstrativ", "format": "gap", "de": "Wo sind eure / Ihre Schlüssel?", "fr": "Où sont ___ clés ?", "answer": "vos", "note": "vos steht vor Plural, votre vor Singular. Beides gilt für ihr (mehrere Personen) und für Sie (höflich)." },
+  { "id": "fn-votre", "topic": "possessiv-demonstrativ", "format": "gap", "de": "Ist das euer / Ihr Auto?", "fr": "C'est ___ voiture ?", "answer": "votre", "note": "votre steht vor Singular, egal ob maskulin oder feminin. Plural: vos." },
+  { "id": "pd-tienne", "topic": "possessiv-demonstrativ", "format": "gap", "de": "Das ist nicht mein Schlüssel, das ist deiner.", "fr": "Ce n'est pas ma clé, c'est ___.", "answer": "la tienne", "note": "la clé ist feminin, also la tienne. Das Possessivpronomen richtet sich nach dem Besitz, nicht nach dem Besitzer." },
+  { "id": "pd-celle", "topic": "possessiv-demonstrativ", "format": "gap", "de": "Welches Kleid? Das, das ich gestern gekauft habe.", "fr": "Quelle robe ? ___ que j'ai achetée hier.", "answer": "Celle", "note": "celui (m), celle (f), ceux (m Pl), celles (f Pl). Die Form richtet sich nach dem Nomen, auf das es zeigt." },
+
+  { "id": "ind-d-interessant", "topic": "indefinit", "format": "gap", "de": "Ich habe etwas Interessantes gesehen.", "fr": "J'ai vu quelque chose ___intéressant.", "answer": "d'", "note": "quelque chose, rien, personne + de + Adjektiv im Maskulin: rien de grave, personne d'important." },
+  { "id": "ind-personne", "topic": "indefinit", "format": "choose", "de": "Niemand ist gekommen.", "fr": "___ n'est venu.", "options": ["Personne", "Rien", "Aucun"], "answer": "Personne", "note": "Personne ne … = niemand. Rien ne … = nichts. Das ne bleibt, pas fällt weg." },
+
+  { "id": "sw-acheter", "topic": "stammwechsel", "format": "conjugate", "de": "ich kaufe", "task": "acheter · présent · je", "answer": "achète", "accept": ["j'achète"], "note": "e → è vor stummer Endung: j'achète, ils achètent. Aber nous achetons, vous achetez." },
+  { "id": "sw-appeler", "topic": "stammwechsel", "format": "conjugate", "de": "sie rufen an", "task": "appeler · présent · ils", "answer": "appellent", "accept": ["ils appellent"], "note": "l wird vor stummer Endung verdoppelt: j'appelle, ils appellent. Aber nous appelons." },
+
+  { "id": "pr-boire", "topic": "present", "format": "conjugate", "de": "wir trinken", "task": "boire · présent · nous", "answer": "buvons", "accept": ["nous buvons"], "note": "je bois, nous buvons, ils boivent. Drei Stämme." },
+  { "id": "pr-croire", "topic": "present", "format": "conjugate", "de": "sie glauben", "task": "croire · présent · ils", "answer": "croient", "accept": ["ils croient"], "note": "je crois, nous croyons, ils croient. i wird zu y vor gesprochener Endung." },
+
+  { "id": "f-prendre-pc", "topic": "passe-compose", "format": "gap", "de": "Gestern haben wir den Zug genommen.", "fr": "Hier, nous ___ le train.", "hint": "prendre, passé composé", "answer": "avons pris", "note": "Partizip von prendre: pris. Ebenso: apprendre, appris; comprendre, compris." },
+  { "id": "f-ouvrir-pc", "topic": "passe-compose", "format": "gap", "de": "Sie hat die Tür geöffnet.", "fr": "Elle ___ la porte.", "hint": "ouvrir, passé composé", "answer": "a ouvert", "note": "Partizip von ouvrir: ouvert. Ebenso: offrir, offert; découvrir, découvert." },
+
+  { "id": "f-savoir-imp", "topic": "imparfait", "format": "gap", "de": "Ich wusste es nicht.", "fr": "Je ne le ___ pas.", "hint": "savoir, imparfait", "answer": "savais", "note": "Der Imparfait-Stamm kommt von nous savons: sav-." },
+  { "id": "imp-etre", "topic": "imparfait", "format": "conjugate", "de": "wir waren", "task": "être · imparfait · nous", "answer": "étions", "accept": ["nous étions"], "note": "être ist das einzige Verb mit eigenem Imparfait-Stamm: ét-." },
+
+  { "id": "pqp-parti", "topic": "plus-que-parfait", "format": "gap", "de": "Als ich ankam, war der Zug schon abgefahren.", "fr": "Quand je suis arrivé, le train ___ déjà parti.", "hint": "Hilfsverb im plus-que-parfait", "answer": "était", "note": "plus-que-parfait = Hilfsverb im imparfait + Partizip. partir nimmt être." },
+
+  { "id": "f-voir-fut", "topic": "futur", "format": "gap", "de": "Wir werden es sehen.", "fr": "Nous le ___.", "hint": "voir, futur simple", "answer": "verrons", "note": "Der Futurstamm von voir ist verr-, nicht voir-." },
+  { "id": "fut-aller", "topic": "futur", "format": "conjugate", "de": "ich werde gehen", "task": "aller · futur simple · je", "answer": "irai", "accept": ["j'irai"], "note": "Futurstamm von aller: ir-. Weitere: être → ser-, avoir → aur-, faire → fer-, venir → viendr-." },
+  { "id": "fut-etre", "topic": "futur", "format": "conjugate", "de": "du wirst sein", "task": "être · futur simple · tu", "answer": "seras", "accept": ["tu seras"], "note": "Futurstamm von être: ser-." },
+
+  { "id": "fp-venir-de", "topic": "futur-proche", "format": "gap", "de": "Ich bin gerade angekommen.", "fr": "Je ___arriver.", "answer": "viens d'", "note": "venir de + Infinitiv = gerade etwas getan haben. aller + Infinitiv = gleich etwas tun." },
+
+  { "id": "fa-aurai", "topic": "futur-anterieur", "format": "gap", "de": "Wenn du zurückkommst, werde ich fertig sein.", "fr": "Quand tu rentreras, j'___ fini.", "hint": "Hilfsverb im futur antérieur", "answer": "aurai", "note": "futur antérieur = Hilfsverb im futur + Partizip. Für etwas, das vor einem Zeitpunkt in der Zukunft abgeschlossen ist." },
+
+  { "id": "f-vouloir-cond", "topic": "conditionnel", "format": "gap", "de": "Ich hätte gern einen Kaffee.", "fr": "Je ___ un café.", "hint": "vouloir, conditionnel", "answer": "voudrais", "note": "Stamm voudr- wie im Futur (je voudrai). Conditionnel = Futurstamm + Imparfait-Endung." },
+
+  { "id": "cp-aurais", "topic": "conditionnel-passe", "format": "gap", "de": "An deiner Stelle hätte ich es gesagt.", "fr": "À ta place, je l'___ dit.", "hint": "Hilfsverb im conditionnel passé", "answer": "aurais", "note": "conditionnel passé = Hilfsverb im conditionnel + Partizip." },
+
+  { "id": "f-venir-subj", "topic": "subjonctif", "format": "gap", "de": "Du musst kommen.", "fr": "Il faut que tu ___.", "hint": "venir, subjonctif", "answer": "viennes", "note": "que je vienne, que tu viennes, que nous venions." },
+  { "id": "sub-faire", "topic": "subjonctif", "format": "conjugate", "de": "dass ich mache", "task": "faire · subjonctif · je", "answer": "fasse", "accept": ["que je fasse"], "note": "faire hat einen eigenen Subjonctif-Stamm: fass-. Ebenso: pouvoir → puiss-, savoir → sach-." },
+  { "id": "sub-pouvoir", "topic": "subjonctif", "format": "conjugate", "de": "dass wir können", "task": "pouvoir · subjonctif · nous", "answer": "puissions", "accept": ["que nous puissions"], "note": "que je puisse, que nous puissions." },
+
+  { "id": "sp-sois", "topic": "subjonctif-passe", "format": "gap", "de": "Ich bin froh, dass du gekommen bist.", "fr": "Je suis content que tu ___ venu.", "answer": "sois", "note": "subjonctif passé = Hilfsverb im subjonctif + Partizip. Gefühle lösen den subjonctif aus." },
+
+  { "id": "imp-sois", "topic": "imperatif", "format": "gap", "de": "Sei nett!", "fr": "___ gentil !", "answer": "Sois", "note": "Der Imperativ von être kommt aus dem subjonctif: sois, soyons, soyez." },
+  { "id": "imp-aie", "topic": "imperatif", "format": "gap", "de": "Hab keine Angst!", "fr": "N'___ pas peur !", "answer": "aie", "note": "Imperativ von avoir: aie, ayons, ayez." },
+
+  { "id": "ger-faisant", "topic": "gerondif", "format": "gap", "de": "Ich habe mich beim Sport verletzt.", "fr": "Je me suis blessé en ___ du sport.", "hint": "faire, gérondif", "answer": "faisant", "note": "Gérondif = en + Stamm von nous im présent + -ant: nous faisons → en faisant." },
+  { "id": "ger-apres-avoir", "topic": "gerondif", "format": "gap", "de": "Nachdem er gegessen hatte, ist er gegangen.", "fr": "Après ___ mangé, il est parti.", "answer": "avoir", "note": "après + Infinitiv Perfekt: après avoir mangé, après être parti. Nur wenn das Subjekt gleich bleibt." },
+
+  { "id": "ps-fut", "topic": "passe-simple", "format": "choose", "fr": "Elle fut surprise.", "task": "Was bedeutet fut hier?", "options": ["elle a été", "elle était", "elle sera"], "answer": "elle a été", "note": "fut ist passé simple von être. In Erzähltexten liest man es wie passé composé. Aktiv braucht man es nicht." },
+
+  { "id": "f-arriver-pc", "topic": "hilfsverb", "format": "gap", "de": "Sie (m, Plural) sind gestern angekommen.", "fr": "Ils ___ hier.", "hint": "arriver, passé composé", "answer": "sont arrivés", "note": "arriver bildet das passé composé mit être, das Partizip richtet sich nach dem Subjekt." },
+  { "id": "hv-sortir", "topic": "hilfsverb", "format": "choose", "de": "Ich habe den Müll rausgebracht.", "fr": "J'___ sorti la poubelle.", "options": ["ai", "suis"], "answer": "ai", "note": "sortir mit direktem Objekt nimmt avoir: j'ai sorti la poubelle. Ohne Objekt être: je suis sorti. Ebenso monter, descendre, passer, rentrer." },
+
+  { "id": "acc-mangees", "topic": "accord", "format": "gap", "de": "die Äpfel, die ich gegessen habe", "fr": "les pommes que j'ai ___", "hint": "manger", "answer": "mangées", "note": "Bei avoir richtet sich das Partizip nach einem direkten Objekt, das vorher steht. Hier que = les pommes (f Pl)." },
+  { "id": "acc-lavee", "topic": "accord", "format": "fix", "de": "Sie hat sich gewaschen.", "fr": "Elle s'est lavé.", "answer": "Elle s'est lavée.", "note": "Bei reflexiven Verben wird angeglichen, wenn se das direkte Objekt ist. Aber: Elle s'est lavé les mains (Objekt ist les mains)." },
+
+  { "id": "pas-volee", "topic": "passiv", "format": "rewrite", "fr": "On a volé ma voiture.", "task": "Ins Passiv setzen.", "answer": "Ma voiture a été volée.", "note": "Passiv = être in der gleichen Zeit + Partizip, das sich nach dem Subjekt richtet. Im Alltag ist on oft natürlicher." },
+
+  { "id": "prn-rendu-compte", "topic": "pronominal", "format": "gap", "de": "Ich habe gemerkt, dass es spät war.", "fr": "Je ___ rendu compte qu'il était tard.", "answer": "me suis", "note": "se rendre compte = merken. rendu bleibt unverändert, weil compte das direkte Objekt ist: elle s'est rendu compte." },
+
+  { "id": "pci-allais", "topic": "pc-imparfait", "format": "choose", "de": "Als ich klein war, bin ich jeden Sommer ans Meer gefahren.", "fr": "Quand j'étais petit, je ___ à la mer chaque été.", "options": ["suis allé", "allais"], "answer": "allais", "note": "Gewohnheit in der Vergangenheit → imparfait. chaque été ist das Signal." },
+  { "id": "pci-a-sonne", "topic": "pc-imparfait", "format": "choose", "de": "Ich las gerade, als das Telefon klingelte.", "fr": "Je lisais quand le téléphone ___.", "options": ["a sonné", "sonnait"], "answer": "a sonné", "note": "Hintergrund, der gerade läuft → imparfait. Ereignis, das dazwischenkommt → passé composé." },
+
+  { "id": "si-avais", "topic": "si-saetze", "format": "gap", "de": "Wenn ich Zeit hätte, würde ich kommen.", "fr": "Si j'___ le temps, je viendrais.", "answer": "avais", "note": "si + imparfait, Hauptsatz im conditionnel. Nach si steht nie conditionnel." },
+  { "id": "si-avais-su", "topic": "si-saetze", "format": "fix", "de": "Wenn ich das gewusst hätte, wäre ich gekommen.", "fr": "Si j'aurais su, je serais venu.", "answer": "Si j'avais su, je serais venu.", "note": "Vergangenheit: si + plus-que-parfait, Hauptsatz im conditionnel passé. Der Fehler si j'aurais ist typisch, auch bei Franzosen." },
+
+  { "id": "sa-pleuve", "topic": "subjonctif-ausloeser", "format": "choose", "de": "Obwohl es regnet, gehen wir raus.", "fr": "Bien qu'il ___, nous sortons.", "options": ["pleut", "pleuve"], "answer": "pleuve", "note": "bien que, quoique, pour que, avant que, à moins que + subjonctif." },
+  { "id": "sa-esperer", "topic": "subjonctif-ausloeser", "format": "choose", "de": "Ich hoffe, dass du kommst.", "fr": "J'espère que tu ___.", "options": ["viens", "viennes"], "answer": "viens", "note": "espérer que + Indikativ, oft futur: j'espère que tu viendras. Anders: souhaiter que + subjonctif." },
+
+  { "id": "qf-serai", "topic": "quand-futur", "format": "gap", "de": "Wenn ich in Paris bin, rufe ich dich an.", "fr": "Quand je ___ à Paris, je t'appellerai.", "answer": "serai", "note": "Nach quand steht futur, wenn es um die Zukunft geht. Deutsch nimmt hier Präsens." },
+
+  { "id": "ir-viendrait", "topic": "indirekte-rede", "format": "rewrite", "fr": "Il a dit : « Je viendrai demain. »", "task": "In indirekte Rede setzen: Il a dit que …", "answer": "Il a dit qu'il viendrait le lendemain.", "accept": ["Il a dit qu'il viendrait demain."], "note": "Einleitung in der Vergangenheit: futur → conditionnel. demain → le lendemain, wenn der Tag schon vorbei ist." },
+
+  { "id": "s-depuis", "topic": "zeitangaben", "format": "sentence", "de": "Seit wann wohnst du hier?", "answer": "Tu habites ici depuis quand ?", "accept": ["Depuis quand est-ce que tu habites ici ?", "Depuis quand habites-tu ici ?"], "note": "depuis + Präsens, genau wie im Deutschen. Englisch würde hier Perfekt nehmen." },
+  { "id": "za-il-y-a", "topic": "zeitangaben", "format": "gap", "de": "Ich habe ihn vor drei Jahren kennengelernt.", "fr": "Je l'ai rencontré ___ trois ans.", "answer": "il y a", "note": "il y a + Zeitraum = vor (zurück in der Vergangenheit). depuis = seit (dauert noch an)." },
+
+  { "id": "fc-fais", "topic": "faire-causatif", "format": "gap", "de": "Ich lasse mein Auto reparieren.", "fr": "Je ___ réparer ma voiture.", "answer": "fais", "note": "faire + Infinitiv = etwas machen lassen (von jemand anderem). laisser + Infinitiv = zulassen: Laisse-moi partir." },
+
+  { "id": "s-aurais-du", "topic": "modalverben", "format": "sentence", "de": "Ich hätte früher kommen sollen.", "answer": "J'aurais dû venir plus tôt.", "note": "Conditionnel passé von devoir: j'aurais dû + Infinitiv. Deutsch stellt sollen ans Ende, Französisch nicht." },
+  { "id": "mv-a-du", "topic": "modalverben", "format": "choose", "de": "Er muss den Zug verpasst haben.", "fr": "Il ___ rater le train.", "options": ["a dû", "devait"], "answer": "a dû", "note": "il a dû = er muss wohl (Vermutung) oder er musste. il devait = er sollte (Plan, der vielleicht nicht klappte)." },
+
+  { "id": "p-souvenir", "topic": "verb-praep", "format": "gap", "de": "Ich erinnere mich an diesen Sommer.", "fr": "Je me souviens ___ cet été.", "answer": "de", "note": "se souvenir de qc. Deutsch sagt an, Französisch de." },
+  { "id": "p-penser", "topic": "verb-praep", "format": "gap", "de": "Ich denke an dich.", "fr": "Je pense ___ toi.", "answer": "à", "note": "penser à qn/qc = an jemanden denken. penser de qc = eine Meinung haben: Qu'est-ce que tu penses de ce film ?" },
+  { "id": "p-arreter", "topic": "verb-praep", "format": "gap", "de": "Sie hat aufgehört zu rauchen.", "fr": "Elle a arrêté ___ fumer.", "answer": "de", "note": "arrêter de faire qc." },
+  { "id": "p-commencer", "topic": "verb-praep", "format": "gap", "de": "Er hat angefangen zu arbeiten.", "fr": "Il a commencé ___ travailler.", "answer": "à", "accept": ["de"], "note": "commencer à faire qc ist der Normalfall. commencer de gibt es auch, klingt aber gehoben." },
+  { "id": "p-dependre", "topic": "verb-praep", "format": "gap", "de": "Das hängt vom Wetter ab.", "fr": "Ça dépend ___ temps.", "answer": "du", "note": "dépendre de qc. de + le wird zu du." },
+  { "id": "p-besoin", "topic": "verb-praep", "format": "gap", "de": "Ich brauche deine Hilfe.", "fr": "J'ai besoin ___ ton aide.", "answer": "de", "note": "avoir besoin de qc. Übrigens: ton aide, obwohl aide feminin ist, weil ein Vokal folgt." },
+  { "id": "p-decider", "topic": "verb-praep", "format": "gap", "de": "Er hat beschlossen zu gehen.", "fr": "Il a décidé ___ partir.", "answer": "de", "note": "décider de faire qc. Aber: se décider à faire qc = sich endlich durchringen." },
+
+  { "id": "aqd-demander", "topic": "verb-a-qn-de", "format": "gap", "de": "Ich habe ihn gebeten zu warten.", "fr": "Je lui ai demandé ___attendre.", "answer": "d'", "note": "demander à qn de faire qc. Darum lui (= à lui), nicht le. Ebenso: conseiller, permettre, interdire, dire à qn de faire qc." },
+
+  { "id": "p-attendre", "topic": "anders-als-deutsch", "format": "gap", "de": "Ich warte auf den Bus.", "fr": "J'attends ___ bus.", "answer": "le", "note": "Falle: attendre qc hat keine Präposition. Deutsch wartet auf etwas, Französisch nicht. Ebenso: chercher qc (suchen nach), payer qc (bezahlen für)." },
+  { "id": "ad-telephoner", "topic": "anders-als-deutsch", "format": "fix", "de": "Ich rufe meinen Bruder an.", "fr": "Je téléphone mon frère.", "answer": "Je téléphone à mon frère.", "note": "téléphoner à qn. Mit Pronomen: je lui téléphone. Ebenso: obéir à qn, ressembler à qn." },
+
+  { "id": "ap-facile-a", "topic": "adj-praep", "format": "choose", "de": "Das ist leicht zu verstehen.", "fr": "C'est facile ___ comprendre.", "options": ["à", "de"], "answer": "à", "note": "Sache + facile à faire: C'est facile à comprendre. Unpersönlich mit Infinitiv danach: Il est facile de comprendre ça." },
+
+  { "id": "np-tasse-a", "topic": "nomen-praep", "format": "choose", "de": "eine Kaffeetasse (die Tasse für Kaffee)", "fr": "une tasse ___ café", "options": ["à", "de"], "answer": "à", "note": "à = Zweck: une tasse à café. de = Inhalt: une tasse de café = eine Tasse Kaffee." },
+
+  { "id": "or-au", "topic": "orte", "format": "gap", "de": "Ich wohne in Portugal.", "fr": "J'habite ___ Portugal.", "answer": "au", "note": "en vor femininen Ländern (en France), au vor maskulinen (au Portugal, au Canada), aux im Plural (aux États-Unis), à vor Städten." },
+
+  { "id": "vm-a-velo", "topic": "verkehrsmittel", "format": "choose", "de": "Ich fahre mit dem Fahrrad zur Arbeit.", "fr": "Je vais au travail ___ vélo.", "options": ["en", "à"], "answer": "à", "note": "à, wenn man draufsitzt oder läuft: à vélo, à pied, à cheval. en bei Fahrzeugen, in denen man sitzt: en voiture, en train. en vélo hört man umgangssprachlich auch." },
+
+  { "id": "zp-dans", "topic": "zeit-praep", "format": "choose", "de": "Ich bin in zwei Stunden zurück.", "fr": "Je reviens ___ deux heures.", "options": ["en", "dans"], "answer": "dans", "note": "dans = nach Ablauf von (Zeitpunkt in der Zukunft). en = innerhalb von (Dauer): J'ai fait ça en deux heures." },
+
+  { "id": "lg-dans-rue", "topic": "lage", "format": "choose", "de": "Ich wohne in der Rue Victor Hugo.", "fr": "J'habite ___ la rue Victor Hugo.", "options": ["sur", "dans"], "answer": "dans", "note": "dans la rue, aber sur le boulevard, sur l'avenue, sur la place." },
+
+  { "id": "s-y-plus", "topic": "verneinung", "format": "sentence", "de": "Ich gehe nicht mehr hin.", "answer": "Je n'y vais plus.", "note": "y = dorthin. Pronomen stehen vor dem Verb, innerhalb von ne … plus." },
+  { "id": "ng-personne", "topic": "verneinung", "format": "gap", "de": "Ich habe niemanden gesehen.", "fr": "Je n'ai vu ___.", "answer": "personne", "note": "personne steht nach dem Partizip, rien davor: je n'ai rien vu." },
+  { "id": "ng-ne-pas-inf", "topic": "verneinung", "format": "gap", "de": "Bitte nicht rauchen.", "fr": "Prière de ___ fumer.", "answer": "ne pas", "note": "Vor einem Infinitiv stehen ne und pas zusammen vor dem Verb: Je préfère ne pas venir." },
+
+  { "id": "fr-inversion", "topic": "fragen", "format": "rewrite", "fr": "Tu as faim ?", "task": "Als Frage mit Inversion stellen.", "answer": "As-tu faim ?", "note": "Inversion: Verb-Bindestrich-Pronomen. Klingt gehoben. Mit est-ce que: Est-ce que tu as faim ?" },
+  { "id": "fr-qui-que", "topic": "fragen", "format": "choose", "de": "Was ist passiert?", "fr": "___ s'est passé ?", "options": ["Qu'est-ce qui", "Qu'est-ce que"], "answer": "Qu'est-ce qui", "note": "Qu'est-ce qui fragt nach dem Subjekt (was passiert?). Qu'est-ce que fragt nach dem Objekt (was machst du?)." },
+
+  { "id": "hh-moi-qui", "topic": "hervorhebung", "format": "gap", "de": "ICH habe das gemacht (nicht er).", "fr": "C'est moi ___ ai fait ça.", "answer": "qui", "note": "c'est … qui hebt das Subjekt hervor. Das Verb richtet sich nach moi: c'est moi qui ai, c'est nous qui sommes." },
+
+  { "id": "kn-tandis-que", "topic": "konnektoren", "format": "choose", "de": "Er ist reich, während sein Bruder arm ist.", "fr": "Il est riche, ___ son frère est pauvre.", "options": ["tandis que", "pendant que"], "answer": "tandis que", "note": "pendant que ist rein zeitlich (während der Zeit, in der). tandis que und alors que drücken auch einen Gegensatz aus." },
+
+  { "id": "zl-97", "topic": "zahlen", "format": "translate", "de": "siebenundneunzig", "answer": "quatre-vingt-dix-sept", "accept": ["quatre vingt dix sept"], "note": "4 × 20 + 17. In Belgien und der Schweiz: nonante-sept." },
+  { "id": "zl-80", "topic": "zahlen", "format": "choose", "de": "achtzig Euro", "fr": "___ euros", "options": ["quatre-vingt", "quatre-vingts"], "answer": "quatre-vingts", "note": "vingt bekommt ein s bei quatre-vingts, aber nicht, wenn eine Zahl folgt: quatre-vingt-deux." },
+
+  { "id": "du-premier", "topic": "datum-uhrzeit", "format": "gap", "de": "am ersten Mai", "fr": "le ___ mai", "answer": "premier", "accept": ["1er"], "note": "Nur der Erste ist eine Ordinalzahl: le premier mai, aber le deux mai, le trois mai." },
+
+  { "id": "gw-embouteillage", "topic": "grundwortschatz", "format": "translate", "de": "ein Stau", "answer": "un embouteillage", "accept": ["un bouchon"], "note": "un bouchon ist umgangssprachlich genauso üblich (eigentlich: Korken)." },
+  { "id": "gw-habitude", "topic": "grundwortschatz", "format": "translate", "de": "eine Gewohnheit", "answer": "une habitude", "note": "Feminin. h muet, also l'habitude, d'habitude (normalerweise)." },
+  { "id": "gw-salaire", "topic": "grundwortschatz", "format": "translate", "de": "ein Gehalt", "answer": "un salaire", "note": "Maskulin trotz -e. Wörter auf -aire sind meist maskulin: le dictionnaire, l'anniversaire." },
+
+  { "id": "wf-ralentir", "topic": "wortfamilien", "format": "translate", "de": "langsamer werden, bremsen", "answer": "ralentir", "note": "Familie: lent, lentement, ralentir, le ralentissement." },
+
+  { "id": "vw-connais", "topic": "verwechsel", "format": "choose", "de": "Ich kenne diese Stadt gut.", "fr": "Je ___ bien cette ville.", "options": ["sais", "connais"], "answer": "connais", "note": "connaître = kennen (Personen, Orte, Dinge). savoir = wissen, können (Fakten, Fähigkeiten): Je sais nager." },
+  { "id": "vw-emmene", "topic": "verwechsel", "format": "choose", "de": "Ich nehme dich mit ins Kino.", "fr": "Je t'___ au cinéma.", "options": ["apporte", "emmène"], "answer": "emmène", "note": "mener für Personen, porter für Dinge. em- = mitnehmen von hier weg (emmener, emporter). a- = hinbringen (amener, apporter)." },
+  { "id": "vw-journee", "topic": "verwechsel", "format": "choose", "de": "Ich hatte einen schönen Tag.", "fr": "J'ai passé une belle ___.", "options": ["jour", "journée"], "answer": "journée", "note": "journée = der Tag als erlebte Zeitspanne. jour = der Tag als Einheit oder Datum. Ebenso an/année, soir/soirée, matin/matinée." },
+
+  { "id": "w-retraite", "topic": "falsche-freunde", "format": "translate", "de": "die Rente", "answer": "la retraite", "note": "Falscher Freund: la rente ist ein Kapitalertrag oder eine Leibrente, nicht die Altersrente." },
+  { "id": "ff-lycee", "topic": "falsche-freunde", "format": "translate", "de": "das Gymnasium", "answer": "le lycée", "note": "Falscher Freund: le gymnase ist die Turnhalle." },
+  { "id": "ff-ridiculiser", "topic": "falsche-freunde", "format": "translate", "de": "sich blamieren", "answer": "se ridiculiser", "accept": ["se couvrir de ridicule"], "note": "Falscher Freund: blâmer heißt tadeln, kritisieren." },
+
+  { "id": "kl-prendre-decision", "topic": "kollokationen", "format": "gap", "de": "eine Entscheidung treffen", "fr": "___ une décision", "answer": "prendre", "note": "prendre une décision. Ebenso: prendre rendez-vous, prendre du poids (zunehmen)." },
+  { "id": "kl-faire-attention", "topic": "kollokationen", "format": "translate", "de": "aufpassen", "answer": "faire attention", "note": "faire attention à qc = auf etwas achten." },
+
+  { "id": "rw-lapin", "topic": "redewendungen", "format": "gap", "de": "Er hat mich gestern versetzt.", "fr": "Il m'a posé un ___ hier.", "answer": "lapin", "note": "poser un lapin à qn = jemanden versetzen, nicht zum Treffen erscheinen." },
+
+  { "id": "rg-bagnole", "topic": "register", "format": "choose", "de": "das Auto (umgangssprachlich)", "task": "Welches Wort ist umgangssprachlich?", "options": ["la bagnole", "le véhicule", "l'automobile"], "answer": "la bagnole", "note": "la bagnole und la caisse sind umgangssprachlich. la voiture ist neutral, le véhicule eher Amtssprache." },
+  { "id": "rg-t-es-ou", "topic": "register", "format": "rewrite", "fr": "T'es où ?", "task": "In neutralem Französisch schreiben.", "answer": "Tu es où ?", "accept": ["Où es-tu ?", "Où est-ce que tu es ?"], "note": "Gesprochen wird tu es oft zu t'es. Fragewort am Ende ist gesprochene Alltagssprache, Inversion ist gehoben." },
+
+  { "id": "hp-s-est", "topic": "homophone", "format": "choose", "de": "Sie hat sich geirrt.", "fr": "Elle ___ trompée.", "options": ["c'est", "s'est", "ses", "ces"], "answer": "s'est", "note": "s'est = se + est (reflexives Verb). c'est = das ist. ses = seine/ihre. ces = diese." },
+  { "id": "hp-ou", "topic": "homophone", "format": "choose", "de": "Wo wohnst du?", "fr": "___ habites-tu ?", "options": ["Ou", "Où"], "answer": "Où", "note": "où = wo, wohin. ou = oder. Das einzige Wort mit ù." },
+  { "id": "hp-leurs", "topic": "homophone", "format": "gap", "de": "Ich habe ihnen ihre Bücher gegeben.", "fr": "Je leur ai donné ___ livres.", "answer": "leurs", "note": "leur vor einem Verb = ihnen, unveränderlich. leur/leurs vor einem Nomen = ihr/ihre, richtet sich nach der Anzahl." },
+
+  { "id": "el-homme", "topic": "elision-liaison", "format": "fix", "de": "der Mann, den ich liebe", "fr": "Le homme que je aime.", "answer": "L'homme que j'aime.", "note": "Vor Vokal und stummem h fällt das e weg: l'homme, j'aime, qu'il. Nicht beim h aspiré: le héros." }
+]

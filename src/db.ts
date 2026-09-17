@@ -1,0 +1,195 @@
+import Dexie, { type EntityTable } from 'dexie'
+import { createEmptyCard, fsrs, generatorParameters, type Card, type Grade } from 'ts-fsrs'
+import { CARDS, CARD_BY_ID, bucketOf, type Bucket, type StudyCard } from './cards'
+import { SECTIONS, TOPIC_ORDER } from './data/topics'
+
+export interface Progress {
+  id: string
+  fsrs: Card
+  /** Local date (YYYY-MM-DD) the card was first studied */
+  introduced: string
+}
+
+export interface ReviewEntry {
+  n?: number
+  id: string
+  grade: Grade
+  at: Date
+}
+
+export const db = new Dexie('cartes') as Dexie & {
+  progress: EntityTable<Progress, 'id'>
+  reviews: EntityTable<ReviewEntry, 'n'>
+}
+
+db.version(1).stores({
+  progress: 'id, fsrs.due, introduced',
+  reviews: '++n, id, at',
+})
+
+const scheduler = fsrs(generatorParameters({ enable_fuzz: true, request_retention: 0.9 }))
+
+export function today(d = new Date()): string {
+  const off = d.getTimezoneOffset() * 60000
+  return new Date(d.getTime() - off).toISOString().slice(0, 10)
+}
+
+export interface Limits {
+  wort: number
+  grammatik: number
+}
+
+const LIMITS_KEY = 'cartes.newPerDay.v2'
+const DEFAULT_LIMITS: Limits = { wort: 10, grammatik: 5 }
+
+export function getLimits(): Limits {
+  try {
+    return { ...DEFAULT_LIMITS, ...JSON.parse(localStorage.getItem(LIMITS_KEY) ?? '{}') }
+  } catch {
+    return DEFAULT_LIMITS
+  }
+}
+
+export function setLimits(limits: Limits) {
+  try {
+    localStorage.setItem(LIMITS_KEY, JSON.stringify(limits))
+  } catch {
+    /* storage unavailable, keep defaults */
+  }
+}
+
+export interface TopicProgress {
+  seen: number
+  total: number
+  due: number
+}
+
+export interface Stats {
+  due: number
+  newLeft: Limits
+  learned: number
+  total: number
+  topics: Map<string, TopicProgress>
+}
+
+const isDue = (p: Progress, now: number) => new Date(p.fsrs.due).getTime() <= now
+
+export async function stats(): Promise<Stats> {
+  const all = (await db.progress.toArray()).filter((p) => CARD_BY_ID.has(p.id))
+  const now = Date.now()
+  const t = today()
+  const limits = getLimits()
+  const seen = new Set(all.map((p) => p.id))
+
+  const introducedToday: Limits = { wort: 0, grammatik: 0 }
+  for (const p of all) if (p.introduced === t) introducedToday[bucketOf(CARD_BY_ID.get(p.id)!)]++
+  const unseen: Limits = { wort: 0, grammatik: 0 }
+  for (const c of CARDS) if (!seen.has(c.id)) unseen[bucketOf(c)]++
+  const left = (b: Bucket) => Math.max(0, Math.min(unseen[b], limits[b] - introducedToday[b]))
+
+  const topics = new Map<string, TopicProgress>(TOPIC_ORDER.map((id) => [id, { seen: 0, total: 0, due: 0 }]))
+  const byId = new Map(all.map((p) => [p.id, p]))
+  for (const c of CARDS) {
+    const tp = topics.get(c.topic)
+    if (!tp) continue
+    tp.total++
+    const p = byId.get(c.id)
+    if (p) {
+      tp.seen++
+      if (isDue(p, now)) tp.due++
+    }
+  }
+
+  return {
+    due: all.filter((p) => isDue(p, now)).length,
+    newLeft: { wort: left('wort'), grammatik: left('grammatik') },
+    learned: all.length,
+    total: CARDS.length,
+    topics,
+  }
+}
+
+/** Round-robin over lists: first item of each, then second of each, … */
+function rotate<T>(lists: T[][]): T[] {
+  const out: T[] = []
+  for (let i = 0; lists.some((l) => i < l.length); i++) {
+    for (const l of lists) if (i < l.length) out.push(l[i])
+  }
+  return out
+}
+
+/**
+ * Orders new grammar cards so each day touches different sections, and within
+ * a section different topics: nouns, pronouns, tenses, … rather than all nouns first.
+ */
+function spread(cards: StudyCard[]): StudyCard[] {
+  return rotate(
+    SECTIONS.map((section) => rotate(section.topics.map((t) => cards.filter((c) => c.topic === t.id)))),
+  )
+}
+
+/**
+ * Daily queue: due reviews first (oldest first), then today's new words and new
+ * grammar mixed. With a topic, only that topic, and up to 10 new cards regardless
+ * of the daily limits.
+ */
+export async function buildQueue(topic?: string): Promise<StudyCard[]> {
+  const all = (await db.progress.toArray()).filter((p) => CARD_BY_ID.has(p.id))
+  const seen = new Set(all.map((p) => p.id))
+  const now = Date.now()
+  const inScope = (c: StudyCard) => !topic || c.topic === topic
+
+  const due = all
+    .filter((p) => isDue(p, now))
+    .sort((a, b) => new Date(a.fsrs.due).getTime() - new Date(b.fsrs.due).getTime())
+    .map((p) => CARD_BY_ID.get(p.id)!)
+    .filter(inScope)
+
+  const unseen = CARDS.filter((c) => !seen.has(c.id) && inScope(c))
+  if (topic) return [...due, ...unseen.slice(0, 10)]
+
+  const { newLeft } = await stats()
+  const words = spread(unseen.filter((c) => bucketOf(c) === 'wort')).slice(0, newLeft.wort)
+  const grammar = spread(unseen.filter((c) => bucketOf(c) === 'grammatik')).slice(0, newLeft.grammatik)
+  return [...due, ...rotate([words, grammar])]
+}
+
+/** Records a grade and returns when the card is due next. */
+export async function grade(id: string, g: Grade): Promise<Date> {
+  const now = new Date()
+  const existing = await db.progress.get(id)
+  const current: Card = existing?.fsrs ?? createEmptyCard<Card>(now)
+  const { card } = scheduler.next(current, now, g)
+  await db.transaction('rw', db.progress, db.reviews, async () => {
+    await db.progress.put({ id, fsrs: card, introduced: existing?.introduced ?? today(now) })
+    await db.reviews.add({ id, grade: g, at: now })
+  })
+  return card.due
+}
+
+export async function exportBackup(): Promise<string> {
+  const [progress, reviews] = await Promise.all([db.progress.toArray(), db.reviews.toArray()])
+  return JSON.stringify({ app: 'cartes', version: 1, exported: new Date(), progress, reviews })
+}
+
+export async function importBackup(json: string): Promise<number> {
+  const data = JSON.parse(json)
+  if (data?.app !== 'cartes' || !Array.isArray(data.progress)) throw new Error('Keine Cartes-Sicherung')
+  const revive = (p: Progress): Progress => ({
+    ...p,
+    fsrs: {
+      ...p.fsrs,
+      due: new Date(p.fsrs.due),
+      last_review: p.fsrs.last_review ? new Date(p.fsrs.last_review) : undefined,
+    },
+  })
+  await db.transaction('rw', db.progress, db.reviews, async () => {
+    await db.progress.clear()
+    await db.reviews.clear()
+    await db.progress.bulkPut(data.progress.map(revive))
+    await db.reviews.bulkAdd(
+      (data.reviews ?? []).map(({ n: _n, ...r }: ReviewEntry) => ({ ...r, at: new Date(r.at) })),
+    )
+  })
+  return data.progress.length
+}
