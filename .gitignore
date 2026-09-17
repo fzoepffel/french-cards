@@ -3,3 +3,6 @@ dist
 .DS_Store
 *.tsbuildinfo
 .claude
+pipeline/raw
+pipeline/out
+.env

@@ -1,0 +1,86 @@
+// Shared card checks, used by the validator and the content pipeline.
+import { SECTIONS } from '../src/data/topics.ts'
+
+export const FORMATS = ['translate', 'gap', 'conjugate', 'rewrite', 'choose', 'fix', 'sentence'] as const
+export type Format = (typeof FORMATS)[number]
+
+export interface Card {
+  id: string
+  topic: string
+  format: Format
+  de?: string
+  fr?: string
+  task?: string
+  hint?: string
+  options?: string[]
+  answer: string
+  accept?: string[]
+  note?: string
+}
+
+export const TOPIC_IDS = SECTIONS.flatMap((s) => s.topics.map((t) => t.id))
+const topics = new Set(TOPIC_IDS)
+const formats = new Set<string>(FORMATS)
+
+/** Returns a list of problems; empty means the card is fine. */
+export function checkCard(c: Card): string[] {
+  const problems: string[] = []
+  const p = (msg: string) => problems.push(msg)
+  if (!c.id) p('missing id')
+  if (!topics.has(c.topic)) p(`unknown topic "${c.topic}"`)
+  if (!formats.has(c.format)) p(`unknown format "${c.format}"`)
+  if (!c.answer) p('missing answer')
+  if (!c.note) p('missing note')
+  if (/[—–]/.test(`${c.note ?? ''}${c.de ?? ''}${c.task ?? ''}`)) p('dash in German text')
+
+  const gaps = (c.fr ?? '').split('___').length - 1
+  switch (c.format) {
+    case 'translate':
+    case 'sentence':
+      if (!c.de) p(`${c.format} needs de`)
+      break
+    case 'gap':
+      if (gaps !== 1) p('gap needs exactly one ___ in fr')
+      break
+    case 'conjugate':
+      if (!c.task) p('conjugate needs task')
+      break
+    case 'rewrite':
+      if (!c.fr || !c.task) p('rewrite needs fr and task')
+      break
+    case 'fix':
+      if (!c.fr) p('fix needs fr')
+      if (c.fr === c.answer) p('fix: fr is already correct')
+      break
+    case 'choose':
+      if (!Array.isArray(c.options) || c.options.length < 2) p('choose needs 2+ options')
+      else if (!c.options.includes(c.answer)) p('choose: answer not among options')
+      if (gaps > 1) p('choose allows at most one ___')
+      if (!gaps && !c.task) p('choose without ___ needs task')
+      break
+  }
+  return problems
+}
+
+const strip = (s: string) =>
+  s
+    .normalize('NFC')
+    .toLowerCase()
+    .replace(/[’']/g, "'")
+    .replace(/[?!.,;:«»]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+/** Two cards that ask the same thing in the same way count as duplicates. */
+export function dedupeKey(c: Card): string {
+  // A verb form is the same card whatever German gloss it carries.
+  const de = c.format === 'conjugate' ? '' : strip(c.de ?? '')
+  return [c.format, de, strip(c.fr ?? ''), strip(c.task ?? ''), strip(c.answer)].join('|')
+}
+
+/** The French headword of a translate card: "la mer" → "mer", "une expérience" → "expérience". */
+export function headword(answer: string): string {
+  return strip(answer)
+    .replace(/œ/g, 'oe')
+    .replace(/^(les|une|le|la|un|l'|se|s')\s*/, '')
+}
