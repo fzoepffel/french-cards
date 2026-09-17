@@ -3,6 +3,7 @@ import { Rating, type Grade } from 'ts-fsrs'
 import { CARDS, FORMAT_LABEL, acceptedAnswers, solution, topicTitle, type StudyCard } from './cards'
 import { check, type Verdict } from './check'
 import { Confirm, type ConfirmProps } from './Confirm'
+import { Mark, Ring, Seal } from './Bits'
 import { SECTIONS } from './data/topics'
 import {
   buildQueue,
@@ -11,7 +12,11 @@ import {
   getSkip,
   grade,
   importBackup,
+  applyTheme,
   cardsInTopic,
+  dueTomorrow,
+  getTheme,
+  streak,
   placementBands,
   preview,
   resetProgress,
@@ -22,6 +27,7 @@ import {
   wordsUpToRank,
   type Band,
   type Limits,
+  type Theme,
   type SkipSettings,
   type Stats,
 } from './db'
@@ -62,10 +68,13 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
   const [msg, setMsg] = useState('')
   const [ask, setAsk] = useState<Omit<ConfirmProps, 'onCancel'> | null>(null)
   const [undo, setUndo] = useState<{ text: string; run: () => void } | null>(null)
+  const [days, setDays] = useState(0)
+  const [theme, setTheme] = useState<Theme>(getTheme)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const refresh = useCallback(() => {
     stats().then(setS)
+    streak().then(setDays)
   }, [])
   useEffect(refresh, [refresh])
 
@@ -139,26 +148,39 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
   }
 
   const total = s ? s.due + s.newLeft.wort + s.newLeft.grammatik : 0
+  const doneToday = s?.doneToday ?? 0
 
   return (
     <main className="home">
-      <header>
-        <h1>Cartes</h1>
-        <p className="sub">Französisch, jeden Tag ein Stück</p>
+      <header className="masthead">
+        <Mark />
+        <div>
+          <h1>Cartes</h1>
+          <p className="sub">Französisch, jeden Tag ein Stück</p>
+        </div>
+        {days > 0 && (
+          <span className="streak" title="Tage in Folge gelernt">
+            <b>{days}</b>
+            {days === 1 ? 'Tag' : 'Tage'}
+          </span>
+        )}
       </header>
 
       <section className="today">
-        <div className="stat">
-          <span className="num">{s?.due ?? '·'}</span>
-          <span className="label">zur Wiederholung</span>
-        </div>
-        <div className="stat">
-          <span className="num">{s?.newLeft.wort ?? '·'}</span>
-          <span className="label">neue Wörter</span>
-        </div>
-        <div className="stat">
-          <span className="num">{s?.newLeft.grammatik ?? '·'}</span>
-          <span className="label">neue Grammatik</span>
+        <Ring done={doneToday} total={doneToday + total} />
+        <div className="legend">
+          <div>
+            <span className="dot due" />
+            <b>{s?.due ?? '·'}</b> zur Wiederholung
+          </div>
+          <div>
+            <span className="dot word" />
+            <b>{s?.newLeft.wort ?? '·'}</b> neue Wörter
+          </div>
+          <div>
+            <span className="dot grammar" />
+            <b>{s?.newLeft.grammatik ?? '·'}</b> neue Grammatik
+          </div>
         </div>
       </section>
 
@@ -288,6 +310,23 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
             Übersprungene Wörter zurückholen
           </button>
         )}
+        <div className="row">
+          <span>Aussehen</span>
+          <div className="segmented" role="group" aria-label="Aussehen">
+            {(['system', 'light', 'dark'] as Theme[]).map((t) => (
+              <button
+                key={t}
+                aria-pressed={theme === t}
+                onClick={() => {
+                  setTheme(t)
+                  applyTheme(t)
+                }}
+              >
+                {t === 'system' ? 'System' : t === 'light' ? 'Hell' : 'Dunkel'}
+              </button>
+            ))}
+          </div>
+        </div>
         <p className="small">
           Dein Fortschritt liegt nur auf diesem Gerät. Eine Sicherung schützt ihn, falls der Browser Daten löscht.
         </p>
@@ -458,6 +497,9 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
           noch {queue.length} {queue.length === 1 ? 'Karte' : 'Karten'}
         </span>
       </div>
+      <div className="session-bar" aria-hidden>
+        <span style={{ width: `${(100 * result.current.reviewed) / (result.current.reviewed + queue.length)}%` }} />
+      </div>
 
       <article className="card">
         <span className="tag">
@@ -531,7 +573,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
             </div>
           )}
           {!verdict && (
-            <button className="primary big" onClick={submit}>
+            <button className={`big ${blank && !selfGraded ? 'quiet' : 'primary'}`} onClick={submit}>
               {selfGraded ? 'Aufdecken' : blank ? 'Weiß ich nicht' : 'Prüfen'}
             </button>
           )}
@@ -772,12 +814,26 @@ function Placement({ onDone }: { onDone: () => void }) {
 }
 
 function Done({ result, onHome }: { result: SessionResult; onHome: () => void }) {
+  const [tomorrow, setTomorrow] = useState<number | null>(null)
+  useEffect(() => {
+    dueTomorrow().then(setTomorrow)
+  }, [])
+
   return (
     <main className="done">
-      <h1>Runde fertig</h1>
+      <h1 className="center">Runde fertig</h1>
+      <Seal
+        score={result.right === result.reviewed ? `${result.reviewed}/${result.reviewed}` : `${result.right}/${result.reviewed}`}
+        perfect={result.right === result.reviewed}
+      />
       <p className="score">
-        {result.right} von {result.reviewed} Antworten richtig
+        {result.right === result.reviewed ? 'Alles richtig. Sehr stark.' : 'Die verpassten Karten kommen morgen wieder.'}
       </p>
+      {tomorrow !== null && (
+        <p className="small center">
+          {tomorrow ? `Morgen warten ${tomorrow} Karten auf dich.` : 'Morgen kommen wieder neue Karten dazu.'}
+        </p>
+      )}
       {result.missed.length > 0 && (
         <section>
           <h2>Diese Karten kommen morgen wieder</h2>

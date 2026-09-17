@@ -111,6 +111,8 @@ export interface TopicProgress {
 
 export interface Stats {
   due: number
+  /** Cards answered today, for the daily ring */
+  doneToday: number
   newLeft: Limits
   learned: number
   total: number
@@ -146,8 +148,13 @@ export async function stats(): Promise<Stats> {
     }
   }
 
+  const midnight = new Date()
+  midnight.setHours(0, 0, 0, 0)
+  const doneToday = await db.reviews.where('at').aboveOrEqual(midnight).count()
+
   return {
     due: all.filter((p) => isDue(p, now)).length,
+    doneToday,
     newLeft: { wort: left('wort'), grammatik: left('grammatik') },
     learned: all.length,
     total: CARDS.length,
@@ -237,6 +244,52 @@ export async function grade(id: string, g: Grade): Promise<Date> {
     await db.reviews.add({ id, grade: g, at: now })
   })
   return card.due
+}
+
+const THEME_KEY = 'cartes.theme'
+export type Theme = 'system' | 'light' | 'dark'
+
+export function getTheme(): Theme {
+  try {
+    const t = localStorage.getItem(THEME_KEY)
+    return t === 'light' || t === 'dark' ? t : 'system'
+  } catch {
+    return 'system'
+  }
+}
+
+export function applyTheme(theme: Theme) {
+  try {
+    localStorage.setItem(THEME_KEY, theme)
+  } catch {
+    /* storage unavailable, the choice just will not persist */
+  }
+  const root = document.documentElement
+  if (theme === 'system') root.removeAttribute('data-theme')
+  else root.setAttribute('data-theme', theme)
+}
+
+/** Days in a row with at least one answer. Today only counts once you have started. */
+export async function streak(): Promise<number> {
+  const recent = await db.reviews.orderBy('at').reverse().limit(1500).toArray()
+  const days = new Set(recent.map((r) => today(new Date(r.at))))
+  const day = new Date()
+  if (!days.has(today(day))) day.setDate(day.getDate() - 1)
+  let n = 0
+  while (days.has(today(day))) {
+    n++
+    day.setDate(day.getDate() - 1)
+  }
+  return n
+}
+
+/** How many cards will be waiting tomorrow, for the end-of-round screen. */
+export async function dueTomorrow(): Promise<number> {
+  const end = new Date()
+  end.setDate(end.getDate() + 1)
+  end.setHours(23, 59, 59, 999)
+  const all = await db.progress.toArray()
+  return all.filter((p) => CARD_BY_ID.has(p.id) && new Date(p.fsrs.due).getTime() <= end.getTime()).length
 }
 
 /** German wording for how far away a due date is, for the grade buttons. */
