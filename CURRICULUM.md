@@ -1,6 +1,6 @@
 # Curriculum
 
-What Cartes teaches, and how a card can ask it. Every card has one **topic**
+What Tessera teaches, and how a card can ask it. Every card has one **topic**
 (Part 1) and one **format** (Part 2). The machine-readable version of the topic
 list is `src/data/topics.ts`; topic ids are shown in `code`.
 

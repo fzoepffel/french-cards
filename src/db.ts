@@ -17,6 +17,7 @@ export interface ReviewEntry {
   at: Date
 }
 
+// The database keeps its original name so existing progress survives the rename to Tessera.
 export const db = new Dexie('cartes') as Dexie & {
   progress: EntityTable<Progress, 'id'>
   reviews: EntityTable<ReviewEntry, 'n'>
@@ -371,7 +372,7 @@ export async function exportBackup(): Promise<string> {
 
 export async function importBackup(json: string): Promise<number> {
   const data = JSON.parse(json)
-  if (data?.app !== 'cartes' || !Array.isArray(data.progress)) throw new Error('Keine Cartes-Sicherung')
+  if (data?.app !== 'cartes' || !Array.isArray(data.progress)) throw new Error('Das ist keine Tessera-Sicherung')
   const revive = (p: Progress): Progress => ({
     ...p,
     fsrs: {

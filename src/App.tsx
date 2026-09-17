@@ -111,7 +111,7 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
     const blob = new Blob([await exportBackup()], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = `cartes-sicherung-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `tessera-sicherung-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(a.href)
     setMsg('Sicherung gespeichert. Sie liegt bei deinen Downloads.')
@@ -172,8 +172,8 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
       <header className="masthead">
         <Mark />
         <div>
-          <h1>Cartes</h1>
-          <p className="sub">Französisch, jeden Tag ein Stück</p>
+          <h1>Tessera</h1>
+          <p className="sub">Französisch: Vokabeln, Formen, Grammatik</p>
         </div>
         {days > 0 && (
           <span className="streak" title="Tage in Folge gelernt">

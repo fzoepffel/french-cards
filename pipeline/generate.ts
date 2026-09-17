@@ -75,7 +75,7 @@ function uniqueId(base: string): string {
   return id
 }
 
-const INTRO = `You write flashcards for Cartes, a French learning app. The learner is a native German speaker at B1 level working towards B2. Each card shows German on the front. The learner types the French answer, and a short German note appears afterwards.
+const INTRO = `You write flashcards for Tessera, a French learning app. The learner is a native German speaker at B1 level working towards B2. Each card shows German on the front. The learner types the French answer, and a short German note appears afterwards.
 
 Write all German text in plain sentences. Never use dashes (— or –) as punctuation in German text.`
 

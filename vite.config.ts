@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['apple-touch-icon.png', 'icon.svg'],
       manifest: {
-        name: 'Cartes',
-        short_name: 'Cartes',
-        description: 'Französisch-Karteikarten: Wörter, Formen, Präpositionen',
+        name: 'Tessera: Französisch',
+        short_name: 'Tessera',
+        description: 'Vokabeln, Formen, Grammatik. Französisch Karte für Karte.',
         lang: 'de',
         start_url: '.',
         scope: '.',
