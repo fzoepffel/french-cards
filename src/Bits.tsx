@@ -149,3 +149,65 @@ export function Burst() {
     </span>
   )
 }
+
+/**
+ * The "neno" wordmark. The letters sit on a bouncing baseline, each with the
+ * icon's dark outline, and the final o is the speech bubble from the icon.
+ * Letters are placed at fixed positions rather than flowed, so the mark looks
+ * the same whatever font metrics a device has.
+ */
+export function Wordmark({ height = 44 }: { height?: number }) {
+  const letters = [
+    { c: 'n', x: 34, y: 78, r: -5 },
+    { c: 'e', x: 96, y: 84, r: 4 },
+    { c: 'n', x: 158, y: 76, r: -3 },
+  ]
+  return (
+    <svg
+      className="wordmark"
+      height={height}
+      viewBox="0 0 268 108"
+      role="img"
+      aria-label="neno"
+      style={{ overflow: 'visible' }}
+    >
+      {/* sparkles, as on the icon */}
+      <g stroke="var(--gold)" strokeWidth="7" strokeLinecap="round">
+        <path d="M232 10v-12" />
+        <path d="M250 22l11-11" />
+      </g>
+      <g
+        fontFamily="ui-rounded, 'SF Pro Rounded', Nunito, system-ui, sans-serif"
+        fontSize="86"
+        fontWeight="800"
+        textAnchor="middle"
+        paintOrder="stroke"
+        stroke="var(--outline)"
+        strokeWidth="13"
+        strokeLinejoin="round"
+        fill="var(--primary)"
+      >
+        {letters.map((l) => (
+          <text key={`${l.c}${l.x}`} x={l.x} y={l.y} transform={`rotate(${l.r} ${l.x} ${l.y})`}>
+            {l.c}
+          </text>
+        ))}
+      </g>
+      {/* the final o, drawn as a speech bubble sitting on the same baseline */}
+      <g transform="translate(-10 8)">
+        <path
+          d="M222 26c-24 0-43 14-43 32 0 11 7 20 17 26l-5 17 20-12c3 1 7 1 11 1 24 0 43-14 43-32s-19-32-43-32z"
+          fill="var(--gold)"
+          stroke="var(--outline)"
+          strokeWidth="7"
+          strokeLinejoin="round"
+        />
+        <g fill="var(--outline)">
+          <circle cx="204" cy="58" r="6.5" />
+          <circle cx="222" cy="58" r="6.5" />
+          <circle cx="240" cy="58" r="6.5" />
+        </g>
+      </g>
+    </svg>
+  )
+}

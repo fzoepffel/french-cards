@@ -14,7 +14,7 @@ import {
 import { check, type Verdict } from './check'
 import { Confirm, type ConfirmProps } from './Confirm'
 import { canSpeak, getAutoSpeak, hasFrenchVoice, setAutoSpeak, speak } from './speak'
-import { Burst, Check, Mark, Ring, Seal, SpeakerIcon, Tower } from './Bits'
+import { Burst, Check, Mark, Ring, Seal, SpeakerIcon, Tower, Wordmark } from './Bits'
 import { SECTIONS } from './data/topics'
 import {
   buildQueue,
@@ -167,7 +167,8 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
       <header className="masthead">
         <Mark />
         <div>
-          <h1>Neno</h1>
+          <h1 className="visually-hidden">Neno</h1>
+          <Wordmark />
           <p className="sub">Französisch: Vokabeln, Formen, Grammatik</p>
         </div>
         {days > 0 && (
