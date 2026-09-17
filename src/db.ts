@@ -27,7 +27,9 @@ db.version(1).stores({
   reviews: '++n, id, at',
 })
 
-const scheduler = fsrs(generatorParameters({ enable_fuzz: true, request_retention: 0.9 }))
+// enable_short_term: false means a card answered right is scheduled in days, not minutes, so a
+// session is one pass through the queue. Missed cards are repeated by the review screen instead.
+const scheduler = fsrs(generatorParameters({ enable_fuzz: true, enable_short_term: false, request_retention: 0.9 }))
 
 export function today(d = new Date()): string {
   const off = d.getTimezoneOffset() * 60000

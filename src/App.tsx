@@ -281,9 +281,12 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
     inputRef.current?.focus()
   }, [card])
 
+  const blank = !input.trim()
+
   const submit = () => {
     if (verdict) return
-    setVerdict(check(input, answers))
+    // Nothing typed means the answer is not known; show it and count the card as missed.
+    setVerdict(blank ? 'wrong' : check(input, answers))
   }
 
   const pick = (option: string) => {
@@ -295,7 +298,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const next = async (g: Grade) => {
     if (busy) return
     setBusy(true)
-    const due = await grade(card.id, g)
+    await grade(card.id, g)
     const r = result.current
     r.reviewed++
     if (g === Rating.Again) {
@@ -303,10 +306,9 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
     } else {
       r.right++
     }
-    // Cards due again within the next half hour come back in this session.
+    // A missed card comes back at the end of this session; a correct one is done for today.
     const rest = queue.slice(1)
-    const again = due.getTime() - Date.now() < 30 * 60 * 1000
-    const nextQueue = again ? [...rest, card] : rest
+    const nextQueue = g === Rating.Again ? [...rest, card] : rest
     setVerdict(null)
     setPicked(null)
     setBusy(false)
@@ -416,7 +418,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
           )}
           {!verdict && (
             <button className="primary big" onClick={submit}>
-              {selfGraded ? 'Aufdecken' : 'Prüfen'}
+              {selfGraded ? 'Aufdecken' : blank ? 'Weiß ich nicht' : 'Prüfen'}
             </button>
           )}
         </>
@@ -445,7 +447,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
               {ok ? (
                 <button onClick={() => next(Rating.Easy)}>Zu leicht</button>
               ) : (
-                !choose && <button onClick={() => next(Rating.Good)}>War doch richtig</button>
+                !choose && !blank && <button onClick={() => next(Rating.Good)}>War doch richtig</button>
               )}
               <button className="primary" autoFocus={choose} onClick={() => next(AUTO_GRADE[verdict])}>
                 Weiter
