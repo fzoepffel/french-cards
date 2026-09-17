@@ -151,39 +151,27 @@ export function Burst() {
 }
 
 /**
- * The "neno" wordmark. The letters sit on a bouncing baseline, each with the
- * icon's dark outline, and the final o is the speech bubble from the icon.
- * Letters are placed at fixed positions rather than flowed, so the mark looks
- * the same whatever font metrics a device has.
+ * The "neno" wordmark: heavy rounded letters on an arc, each outlined in the
+ * icon's dark brown, with the final o drawn as the gold speech bubble and a
+ * fan of sparkles. Letters sit at fixed positions rather than flowing, so the
+ * mark looks the same whatever font metrics a device has.
  */
-export function Wordmark({ height = 44 }: { height?: number }) {
+export function Wordmark({ height = 46 }: { height?: number }) {
   const letters = [
-    { c: 'n', x: 34, y: 78, r: -5 },
-    { c: 'e', x: 96, y: 84, r: 4 },
-    { c: 'n', x: 158, y: 76, r: -3 },
+    { c: 'n', x: 36, y: 86, r: -8 },
+    { c: 'e', x: 100, y: 78, r: -2 },
+    { c: 'n', x: 164, y: 80, r: 4 },
   ]
   return (
-    <svg
-      className="wordmark"
-      height={height}
-      viewBox="0 0 268 108"
-      role="img"
-      aria-label="neno"
-      style={{ overflow: 'visible' }}
-    >
-      {/* sparkles, as on the icon */}
-      <g stroke="var(--gold)" strokeWidth="7" strokeLinecap="round">
-        <path d="M232 10v-12" />
-        <path d="M250 22l11-11" />
-      </g>
+    <svg className="wordmark" height={height} viewBox="0 0 312 118" role="img" aria-label="neno">
       <g
         fontFamily="ui-rounded, 'SF Pro Rounded', Nunito, system-ui, sans-serif"
-        fontSize="86"
+        fontSize="90"
         fontWeight="800"
         textAnchor="middle"
         paintOrder="stroke"
         stroke="var(--outline)"
-        strokeWidth="13"
+        strokeWidth="15"
         strokeLinejoin="round"
         fill="var(--primary)"
       >
@@ -193,20 +181,26 @@ export function Wordmark({ height = 44 }: { height?: number }) {
           </text>
         ))}
       </g>
-      {/* the final o, drawn as a speech bubble sitting on the same baseline */}
-      <g transform="translate(-10 8)">
+      {/* the final o: a speech bubble with its tail at the bottom left */}
+      <g transform="translate(36 6) scale(0.86)">
         <path
-          d="M222 26c-24 0-43 14-43 32 0 11 7 20 17 26l-5 17 20-12c3 1 7 1 11 1 24 0 43-14 43-32s-19-32-43-32z"
+          d="M232 20c-26 0-47 15-47 34 0 12 8 22 20 28l-14 20 30-13c3 1 7 1 11 1 26 0 47-15 47-36s-21-34-47-34z"
           fill="var(--gold)"
           stroke="var(--outline)"
-          strokeWidth="7"
+          strokeWidth="8"
           strokeLinejoin="round"
         />
         <g fill="var(--outline)">
-          <circle cx="204" cy="58" r="6.5" />
-          <circle cx="222" cy="58" r="6.5" />
-          <circle cx="240" cy="58" r="6.5" />
+          <circle cx="212" cy="55" r="7" />
+          <circle cx="232" cy="55" r="7" />
+          <circle cx="252" cy="55" r="7" />
         </g>
+      </g>
+      {/* sparkle fan, as on the icon */}
+      <g stroke="var(--gold)" strokeWidth="7" strokeLinecap="round">
+        <path d="M276 16 L270 2" />
+        <path d="M292 24 L298 9" />
+        <path d="M300 42 L308 36" />
       </g>
     </svg>
   )
