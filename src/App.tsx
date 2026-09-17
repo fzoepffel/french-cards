@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Rating, type Grade } from 'ts-fsrs'
 import { CARDS, FORMAT_LABEL, acceptedAnswers, solution, topicTitle, type StudyCard } from './cards'
 import { check, type Verdict } from './check'
+import { Confirm, type ConfirmProps } from './Confirm'
 import { SECTIONS } from './data/topics'
 import {
   buildQueue,
@@ -10,11 +11,15 @@ import {
   getSkip,
   grade,
   importBackup,
+  cardsInTopic,
   placementBands,
+  preview,
+  resetProgress,
   setLimits,
   setSkip,
   toggleTopicSkip,
   stats,
+  wordsUpToRank,
   type Band,
   type Limits,
   type SkipSettings,
@@ -55,6 +60,8 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
   const [limits, setLim] = useState<Limits>(getLimits)
   const [skip, setSkipState] = useState<SkipSettings>(getSkip)
   const [msg, setMsg] = useState('')
+  const [ask, setAsk] = useState<Omit<ConfirmProps, 'onCancel'> | null>(null)
+  const [undo, setUndo] = useState<{ text: string; run: () => void } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const refresh = useCallback(() => {
@@ -81,16 +88,54 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
     a.download = `cartes-sicherung-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(a.href)
+    setMsg('Sicherung gespeichert. Sie liegt bei deinen Downloads.')
   }
 
   const upload = async (file: File) => {
-    try {
-      const n = await importBackup(await file.text())
-      setMsg(`${n} Karten wiederhergestellt.`)
+    setAsk({
+      title: 'Sicherung laden?',
+      body: 'Das ersetzt deinen gesamten Fortschritt auf diesem Gerät durch den Stand aus der Datei. Was du seitdem gelernt hast, geht verloren.',
+      confirmLabel: 'Ersetzen',
+      destructive: true,
+      onConfirm: async () => {
+        setAsk(null)
+        try {
+          const n = await importBackup(await file.text())
+          setMsg(`${n} Karten aus der Sicherung übernommen.`)
+          refresh()
+        } catch (e) {
+          setMsg(e instanceof Error ? e.message : 'Die Datei konnte nicht gelesen werden.')
+        }
+      },
+    })
+  }
+
+  const skipTopic = (id: string, title: string) => {
+    if (skip.topics.includes(id)) {
+      setSkipState(toggleTopicSkip(id))
+      setMsg(`"${title}" ist wieder dabei.`)
       refresh()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Import fehlgeschlagen.')
+      return
     }
+    setAsk({
+      title: `"${title}" überspringen?`,
+      body: `${cardsInTopic(id)} Karten aus diesem Thema kommen dann nicht mehr dran. Schon gelernte Karten bleiben gespeichert, und du kannst das Thema hier jederzeit wieder aufnehmen.`,
+      confirmLabel: 'Überspringen',
+      destructive: true,
+      onConfirm: () => {
+        setAsk(null)
+        setSkipState(toggleTopicSkip(id))
+        refresh()
+        setUndo({
+          text: `"${title}" wird übersprungen.`,
+          run: () => {
+            setSkipState(toggleTopicSkip(id))
+            refresh()
+            setUndo(null)
+          },
+        })
+      },
+    })
   }
 
   const total = s ? s.due + s.newLeft.wort + s.newLeft.grammatik : 0
@@ -105,7 +150,7 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
       <section className="today">
         <div className="stat">
           <span className="num">{s?.due ?? '·'}</span>
-          <span className="label">fällig</span>
+          <span className="label">zur Wiederholung</span>
         </div>
         <div className="stat">
           <span className="num">{s?.newLeft.wort ?? '·'}</span>
@@ -118,20 +163,32 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
       </section>
 
       <button className="primary big" disabled={!total} onClick={() => start()}>
-        {total ? `Los geht's (${total})` : 'Für heute fertig'}
+        {total ? `Heutige Runde starten (${total} Karten)` : 'Heute schon erledigt'}
       </button>
+      <p className="small center">
+        {total
+          ? 'Du tippst die französische Antwort. Falsche Karten kommen am Ende der Runde noch einmal.'
+          : 'Morgen sind die nächsten Karten dran. Du kannst unten ein einzelnes Thema üben.'}
+      </p>
 
       {!skip.placed && (
         <button className="invite" onClick={onPlacement}>
-          <strong>Einstufung machen</strong>
-          <span>Ein kurzer Test überspringt die Wörter, die du schon kannst.</span>
+          <strong>Zuerst einstufen lassen</strong>
+          <span>
+            Ein kurzer Test, der zeigt, welche Wörter du schon kannst. Übersprungen wird nur, was du am Ende
+            bestätigst.
+          </span>
         </button>
       )}
 
       <section className="topics">
         <h2>
-          Themen <span className="count">{s ? `${s.learned} von ${s.total} Karten gesehen` : ''}</span>
+          Themen <span className="count">{s ? `${s.learned} von ${s.total} Karten schon gesehen` : ''}</span>
         </h2>
+        <p className="small">
+          Die Zahlen zeigen gesehene Karten von allen Karten des Themas. "Üben" nimmt nur dieses Thema dran, auch
+          außerhalb der Tagesrunde.
+        </p>
         {SECTIONS.map((section) => {
           const rows = section.topics.map((t) => ({ ...t, p: s?.topics.get(t.id) }))
           const seen = rows.reduce((n, r) => n + (r.p?.seen ?? 0), 0)
@@ -160,20 +217,19 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
                     <button
                       className="skip"
                       aria-pressed={skip.topics.includes(r.id)}
-                      title={skip.topics.includes(r.id) ? 'Wieder aufnehmen' : 'Thema überspringen'}
-                      onClick={() => {
-                        setSkipState(toggleTopicSkip(r.id))
-                        refresh()
-                      }}
+                      onClick={() => skipTopic(r.id, r.title)}
                     >
-                      {skip.topics.includes(r.id) ? 'übersprungen' : 'kann ich'}
+                      {skip.topics.includes(r.id) ? 'wieder aufnehmen' : 'kann ich schon'}
                     </button>
-                    <button
-                      disabled={!r.p || (r.p.due === 0 && r.p.seen === r.p.total)}
-                      onClick={() => start(r.id)}
-                    >
-                      Üben
-                    </button>
+                    {(() => {
+                      const empty = !r.p || r.p.total === 0
+                      const finishedForNow = !empty && r.p!.due === 0 && r.p!.seen === r.p!.total
+                      return (
+                        <button disabled={empty || finishedForNow} onClick={() => start(r.id)}>
+                          {finishedForNow ? 'alles dran' : 'Üben'}
+                        </button>
+                      )
+                    })()}
                   </li>
                 ))}
               </ul>
@@ -188,6 +244,10 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
           Neue Wörter pro Tag
           <input type="number" min={0} max={100} value={limits.wort} onChange={(e) => updateLimit('wort', e.target.value)} />
         </label>
+        <p className="small">
+          So viele neue Karten kommen pro Tag dazu. Wiederholungen sind davon nicht betroffen, die richten sich danach,
+          wie gut du eine Karte kannst.
+        </p>
         <label className="row">
           Neue Grammatikkarten pro Tag
           <input
@@ -209,12 +269,21 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
         </div>
         {skip.knownWordRank > 0 && (
           <button
-            onClick={() => {
-              const next = { ...getSkip(), knownWordRank: 0 }
-              setSkip(next)
-              setSkipState(next)
-              refresh()
-            }}
+            onClick={() =>
+              setAsk({
+                title: 'Übersprungene Wörter zurückholen?',
+                body: `${wordsUpToRank(skip.knownWordRank)} Wörter aus der Einstufung kommen dann wieder in die Tagesrunde.`,
+                confirmLabel: 'Zurückholen',
+                onConfirm: () => {
+                  const next = { ...getSkip(), knownWordRank: 0 }
+                  setSkip(next)
+                  setSkipState(next)
+                  setAsk(null)
+                  setMsg('Die übersprungenen Wörter sind wieder dabei.')
+                  refresh()
+                },
+              })
+            }
           >
             Übersprungene Wörter zurückholen
           </button>
@@ -234,7 +303,38 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
           />
         </div>
         {msg && <p className="small">{msg}</p>}
+
+        <div className="row buttons">
+          <button
+            className="danger-link"
+            onClick={() =>
+              setAsk({
+                title: 'Allen Fortschritt löschen?',
+                body: 'Alle Karten gelten danach wieder als ungelernt, auf diesem Gerät. Die Karten selbst bleiben erhalten. Speichere vorher eine Sicherung, wenn du unsicher bist.',
+                confirmLabel: 'Alles löschen',
+                destructive: true,
+                onConfirm: async () => {
+                  await resetProgress()
+                  setAsk(null)
+                  setMsg('Der Fortschritt wurde gelöscht.')
+                  refresh()
+                },
+              })
+            }
+          >
+            Fortschritt zurücksetzen
+          </button>
+        </div>
       </details>
+
+      {undo && (
+        <div className="undo" role="status">
+          <span>{undo.text}</span>
+          <button onClick={undo.run}>Rückgängig</button>
+        </div>
+      )}
+
+      {ask && <Confirm {...ask} onCancel={() => setAsk(null)} />}
     </main>
   )
 }
@@ -272,6 +372,8 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const [busy, setBusy] = useState(false)
   const result = useRef<SessionResult>({ reviewed: 0, right: 0, missed: [] })
   const inputRef = useRef<HTMLInputElement>(null)
+  const [again, setAgain] = useState<Record<Grade, string> | null>(null)
+  const [confirmEnd, setConfirmEnd] = useState(false)
 
   const selfGraded = card.format === 'sentence'
   const choose = card.format === 'choose'
@@ -279,6 +381,13 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
 
   useEffect(() => {
     inputRef.current?.focus()
+    setAgain(null)
+    // When the card comes back depends on the grade, so the buttons can say it.
+    let current = true
+    preview(card.id).then((p) => current && setAgain(p))
+    return () => {
+      current = false
+    }
   }, [card])
 
   const blank = !input.trim()
@@ -342,10 +451,12 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   return (
     <main className="review">
       <div className="progress">
-        <button className="link" onClick={() => onFinish(result.current)}>
-          Beenden
+        <button className="link" onClick={() => (result.current.reviewed ? setConfirmEnd(true) : onFinish(result.current))}>
+          Runde beenden
         </button>
-        <span>{queue.length} übrig</span>
+        <span>
+          noch {queue.length} {queue.length === 1 ? 'Karte' : 'Karten'}
+        </span>
       </div>
 
       <article className="card">
@@ -380,7 +491,9 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
       </article>
 
       {choose ? (
-        <div className="options">
+        <>
+          {!verdict && <p className="small center">Tippe die richtige Form an.</p>}
+          <div className="options">
           {card.options!.map((o) => {
             const state = !verdict ? '' : o === card.answer ? 'is-ok' : o === picked ? 'is-bad' : 'is-dim'
             return (
@@ -389,7 +502,8 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
               </button>
             )
           })}
-        </div>
+          </div>
+        </>
       ) : (
         <>
           <input
@@ -425,36 +539,65 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
       )}
 
       {verdict && (
-        <section className="reveal">
+        <section className="reveal" aria-live="polite">
           {!selfGraded && <p className={`verdict ${ok ? 'ok' : 'bad'}`}>{VERDICT_TEXT[verdict]}</p>}
           {selfGraded && verdict !== 'wrong' && <p className="verdict ok">{VERDICT_TEXT[verdict]}</p>}
           <p className="solution" lang="fr">
             {solution(card)}
           </p>
+          {verdict === 'accent' && <p className="small">Akzente zählen als Fehler, sie verändern die Aussprache.</p>}
+          {verdict === 'typo' && <p className="small">Ein Buchstabe daneben. Zählt als gewusst, kommt aber früher wieder.</p>}
           {card.note && <p className="note">{card.note}</p>}
 
           {selfGraded ? (
-            <div className="grades">
-              <button onClick={() => next(Rating.Again)}>Nochmal</button>
-              <button onClick={() => next(Rating.Hard)}>Schwer</button>
-              <button className="primary" onClick={() => next(Rating.Good)}>
-                Gut
-              </button>
-              <button onClick={() => next(Rating.Easy)}>Leicht</button>
-            </div>
+            <>
+              <p className="small">Vergleiche mit deiner Antwort. Wie gut wusstest du es?</p>
+              <div className="grades">
+                <button onClick={() => next(Rating.Again)}>
+                  Falsch<small>{again ? again[Rating.Again] : ' '}</small>
+                </button>
+                <button onClick={() => next(Rating.Hard)}>
+                  Fast<small>{again ? again[Rating.Hard] : ' '}</small>
+                </button>
+                <button className="primary" onClick={() => next(Rating.Good)}>
+                  Richtig<small>{again ? again[Rating.Good] : ' '}</small>
+                </button>
+                <button onClick={() => next(Rating.Easy)}>
+                  Sehr leicht<small>{again ? again[Rating.Easy] : ' '}</small>
+                </button>
+              </div>
+            </>
           ) : (
             <div className="grades">
               {ok ? (
-                <button onClick={() => next(Rating.Easy)}>Zu leicht</button>
+                <button onClick={() => next(Rating.Easy)}>
+                  Wusste ich sofort<small>{again ? again[Rating.Easy] : ' '}</small>
+                </button>
               ) : (
-                !choose && !blank && <button onClick={() => next(Rating.Good)}>War doch richtig</button>
+                !choose &&
+                !blank && (
+                  <button onClick={() => next(Rating.Good)}>
+                    Zählt als richtig<small>{again ? again[Rating.Good] : ' '}</small>
+                  </button>
+                )
               )}
               <button className="primary" autoFocus={choose} onClick={() => next(AUTO_GRADE[verdict])}>
-                Weiter
+                Weiter<small>{again ? again[AUTO_GRADE[verdict]] : ' '}</small>
               </button>
             </div>
           )}
         </section>
+      )}
+
+      {confirmEnd && (
+        <Confirm
+          title="Runde beenden?"
+          body={`Noch ${queue.length} Karten offen. Beantwortete Karten sind gespeichert, der Rest kommt beim nächsten Start wieder.`}
+          confirmLabel="Beenden"
+          cancelLabel="Weitermachen"
+          onConfirm={() => onFinish(result.current)}
+          onCancel={() => setConfirmEnd(false)}
+        />
       )}
     </main>
   )
@@ -472,6 +615,7 @@ function Placement({ onDone }: { onDone: () => void }) {
   const [right, setRight] = useState(0)
   const [knownRank, setKnownRank] = useState(0)
   const [finished, setFinished] = useState(false)
+  const [leaving, setLeaving] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const current = bands[band]
@@ -481,10 +625,15 @@ function Placement({ onDone }: { onDone: () => void }) {
     inputRef.current?.focus()
   }, [card])
 
-  const save = (rank: number) => {
-    setSkip({ ...getSkip(), knownWordRank: rank, placed: true })
+  /** Only shows the result. Storing it happens when the learner accepts it. */
+  const finish = (rank: number) => {
     setKnownRank(rank)
     setFinished(true)
+  }
+
+  const apply = (rank: number) => {
+    setSkip({ ...getSkip(), knownWordRank: rank, placed: true })
+    onDone()
   }
 
   const answer = (correct: boolean) => {
@@ -502,7 +651,7 @@ function Placement({ onDone }: { onDone: () => void }) {
       setBand(band + 1)
       setKnownRank(current.to)
     } else {
-      save(score >= 5 ? current.to : current.from)
+      finish(score >= 5 ? current.to : current.from)
     }
   }
 
@@ -520,21 +669,41 @@ function Placement({ onDone }: { onDone: () => void }) {
 
   if (finished) {
     const skipped = CARDS.filter((c) => c.rank !== undefined && c.rank <= knownRank).length
+    const words = (n: number) => `${n} ${n === 1 ? 'Wort' : 'Wörter'}`
     return (
       <main className="done">
-        <h1>Einstufung fertig</h1>
-        <p className="score">
-          {knownRank
-            ? `${skipped} Wörter bis Rang ${knownRank} sind als bekannt markiert.`
-            : 'Es wird nichts übersprungen, du fängst von vorne an.'}
-        </p>
-        <p className="small">
-          Das lässt sich in den Einstellungen jederzeit zurücknehmen. Grammatikthemen kannst du im Themenbaum einzeln
-          auf "kann ich" setzen.
-        </p>
-        <button className="primary big" onClick={onDone}>
-          Zur Übersicht
-        </button>
+        <h1>Ergebnis der Einstufung</h1>
+        {/* Below a handful of words there is nothing worth skipping. */}
+        {skipped >= 5 ? (
+          <>
+            <p className="score">{words(skipped)} kannst du überspringen.</p>
+            <p>
+              Das sind die häufigsten Wörter der Liste. Sie kommen dann nicht mehr in der Tagesrunde vor, alles
+              Seltenere schon.
+            </p>
+            <p className="small">
+              Du kannst das in den Einstellungen jederzeit zurückholen. Grammatikthemen überspringst du einzeln in der
+              Themenliste.
+            </p>
+            <div className="grades">
+              <button onClick={() => apply(0)}>Nichts überspringen</button>
+              <button className="primary" onClick={() => apply(knownRank)}>
+                {words(skipped)} überspringen
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="score">Es wird nichts übersprungen.</p>
+            <p>
+              Du fängst bei den häufigsten Wörtern an. Das ist bei diesem Ergebnis der sinnvollste Start, und der
+              Abstand zwischen den Wiederholungen wächst ohnehin schnell, wenn du eine Karte sicher kannst.
+            </p>
+            <button className="primary big" onClick={() => apply(0)}>
+              Alles klar
+            </button>
+          </>
+        )}
       </main>
     )
   }
@@ -542,16 +711,16 @@ function Placement({ onDone }: { onDone: () => void }) {
   return (
     <main className="review">
       <div className="progress">
-        <button className="link" onClick={() => save(knownRank)}>
+        <button className="link" onClick={() => setLeaving(true)}>
           Abbrechen
         </button>
         <span>
-          Häufigkeit {current.from + 1}–{current.to} · {index + 1}/{current.cards.length}
+          Stufe {band + 1} von {bands.length} · Wort {index + 1} von {current.cards.length}
         </span>
       </div>
 
       <article className="card">
-        <span className="tag">Einstufung</span>
+        <span className="tag">Einstufung · Übersetzen</span>
         <p className="prompt">{card.de}</p>
       </article>
 
@@ -575,14 +744,29 @@ function Placement({ onDone }: { onDone: () => void }) {
 
       <div className="grades">
         <button onClick={() => answer(false)}>Kenne ich nicht</button>
-        <button className="primary" onClick={() => answer(check(input, acceptedAnswers(card)) !== 'wrong')}>
-          Weiter
+        <button
+          className="primary"
+          disabled={!input.trim()}
+          onClick={() => answer(check(input, acceptedAnswers(card)) !== 'wrong')}
+        >
+          Antwort prüfen
         </button>
       </div>
       <p className="small">
-        Sechs Wörter pro Häufigkeitsstufe. Fünf richtige überspringen die ganze Stufe, sonst hört die Einstufung hier
-        auf.
+        Sechs Wörter pro Stufe, von häufig zu selten. Fünf richtige und die ganze Stufe gilt als bekannt, sonst endet
+        die Einstufung hier. Erst am Ende entscheidest du, ob etwas übersprungen wird.
       </p>
+
+      {leaving && (
+        <Confirm
+          title="Einstufung abbrechen?"
+          body="Es wird nichts übersprungen und nichts gespeichert. Du kannst die Einstufung jederzeit in den Einstellungen neu starten."
+          confirmLabel="Abbrechen"
+          cancelLabel="Weitermachen"
+          onConfirm={onDone}
+          onCancel={() => setLeaving(false)}
+        />
+      )}
     </main>
   )
 }
@@ -590,13 +774,13 @@ function Placement({ onDone }: { onDone: () => void }) {
 function Done({ result, onHome }: { result: SessionResult; onHome: () => void }) {
   return (
     <main className="done">
-      <h1>Fertig</h1>
+      <h1>Runde fertig</h1>
       <p className="score">
-        {result.right} von {result.reviewed} richtig
+        {result.right} von {result.reviewed} Antworten richtig
       </p>
       {result.missed.length > 0 && (
         <section>
-          <h2>Kommen bald wieder</h2>
+          <h2>Diese Karten kommen morgen wieder</h2>
           <ul className="missed">
             {result.missed.map((c) => (
               <li key={c.id}>

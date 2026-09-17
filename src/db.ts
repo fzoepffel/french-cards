@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import { createEmptyCard, fsrs, generatorParameters, type Card, type Grade } from 'ts-fsrs'
+import { createEmptyCard, fsrs, generatorParameters, Rating, type Card, type Grade } from 'ts-fsrs'
 import { CARDS, CARD_BY_ID, bucketOf, type Bucket, type StudyCard } from './cards'
 import { SECTIONS, TOPIC_ORDER } from './data/topics'
 
@@ -237,6 +237,48 @@ export async function grade(id: string, g: Grade): Promise<Date> {
     await db.reviews.add({ id, grade: g, at: now })
   })
   return card.due
+}
+
+/** German wording for how far away a due date is, for the grade buttons. */
+export function whenAgain(due: Date, now = new Date()): string {
+  const minutes = Math.round((due.getTime() - now.getTime()) / 60000)
+  if (minutes < 60) return `in ${Math.max(1, minutes)} min`
+  const days = Math.round(minutes / (60 * 24))
+  if (days <= 0) return 'später heute'
+  if (days === 1) return 'morgen'
+  if (days < 31) return `in ${days} Tagen`
+  const months = Math.round(days / 30)
+  return months < 12 ? `in ${months} Monaten` : `in ${Math.round(days / 365)} Jahren`
+}
+
+/** What each grade would do to this card, so the buttons can say when it comes back. */
+export async function preview(id: string): Promise<Record<Grade, string>> {
+  const now = new Date()
+  const existing = await db.progress.get(id)
+  const current: Card = existing?.fsrs ?? createEmptyCard<Card>(now)
+  const log = scheduler.repeat(current, now)
+  const out = {} as Record<Grade, string>
+  for (const g of [Rating.Again, Rating.Hard, Rating.Good, Rating.Easy] as Grade[]) {
+    out[g] = whenAgain(log[g].card.due, now)
+  }
+  return out
+}
+
+/** How many cards a topic would take out of the rotation. */
+export function cardsInTopic(topic: string): number {
+  return CARDS.filter((c) => c.topic === topic).length
+}
+
+/** Word cards at or below a frequency rank, for the placement summary. */
+export function wordsUpToRank(rank: number): number {
+  return CARDS.filter((c) => c.rank !== undefined && c.rank <= rank).length
+}
+
+export async function resetProgress(): Promise<void> {
+  await db.transaction('rw', db.progress, db.reviews, async () => {
+    await db.progress.clear()
+    await db.reviews.clear()
+  })
 }
 
 export async function exportBackup(): Promise<string> {

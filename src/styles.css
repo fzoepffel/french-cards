@@ -489,3 +489,105 @@ button.skip[aria-pressed='true'] {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* Confirmation dialog */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 18, 15, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 10;
+}
+
+.dialog {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+}
+
+.dialog h2 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  color: var(--text);
+}
+
+.dialog p {
+  margin: 0 0 18px;
+  color: var(--muted);
+}
+
+.dialog-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.dialog-buttons button {
+  flex: 1;
+  padding: 13px 10px;
+}
+
+button.danger {
+  background: var(--bad);
+  border-color: var(--bad);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+button.danger-link {
+  background: none;
+  border: none;
+  color: var(--bad);
+  padding: 4px 0;
+  text-decoration: underline;
+}
+
+/* Undo bar */
+.undo {
+  position: sticky;
+  bottom: calc(env(safe-area-inset-bottom) + 12px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--text);
+  color: var(--bg);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+
+.undo button {
+  background: none;
+  border: none;
+  color: var(--bg);
+  font-weight: 600;
+  text-decoration: underline;
+  padding: 4px;
+}
+
+.center {
+  text-align: center;
+}
+
+/* Grade buttons show when the card comes back */
+.grades button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  line-height: 1.2;
+}
+
+.grades small {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  font-weight: 400;
+  min-height: 0.95em;
+}
