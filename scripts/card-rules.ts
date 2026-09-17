@@ -16,6 +16,8 @@ export interface Card {
   answer: string
   accept?: string[]
   note?: string
+  /** Frequency rank for word cards, used by the placement check */
+  rank?: number
 }
 
 export const TOPIC_IDS = SECTIONS.flatMap((s) => s.topics.map((t) => t.id))

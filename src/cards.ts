@@ -18,6 +18,8 @@ export interface StudyCard {
   answer: string
   accept?: string[]
   note?: string
+  /** Frequency rank for word cards, used by the placement check */
+  rank?: number
 }
 
 export const CARDS = raw as StudyCard[]

@@ -1,21 +1,31 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Rating, type Grade } from 'ts-fsrs'
-import { FORMAT_LABEL, acceptedAnswers, solution, topicTitle, type StudyCard } from './cards'
+import { CARDS, FORMAT_LABEL, acceptedAnswers, solution, topicTitle, type StudyCard } from './cards'
 import { check, type Verdict } from './check'
 import { SECTIONS } from './data/topics'
 import {
   buildQueue,
   exportBackup,
   getLimits,
+  getSkip,
   grade,
   importBackup,
+  placementBands,
   setLimits,
+  setSkip,
+  toggleTopicSkip,
   stats,
+  type Band,
   type Limits,
+  type SkipSettings,
   type Stats,
 } from './db'
 
-type Screen = { name: 'home' } | { name: 'review'; queue: StudyCard[] } | { name: 'done'; result: SessionResult }
+type Screen =
+  | { name: 'home' }
+  | { name: 'review'; queue: StudyCard[] }
+  | { name: 'done'; result: SessionResult }
+  | { name: 'placement' }
 
 interface SessionResult {
   reviewed: number
@@ -32,12 +42,18 @@ export default function App() {
   if (screen.name === 'done') {
     return <Done result={screen.result} onHome={() => setScreen({ name: 'home' })} />
   }
-  return <Home onStart={(queue) => setScreen({ name: 'review', queue })} />
+  if (screen.name === 'placement') {
+    return <Placement onDone={() => setScreen({ name: 'home' })} />
+  }
+  return (
+    <Home onStart={(queue) => setScreen({ name: 'review', queue })} onPlacement={() => setScreen({ name: 'placement' })} />
+  )
 }
 
-function Home({ onStart }: { onStart: (queue: StudyCard[]) => void }) {
+function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void; onPlacement: () => void }) {
   const [s, setS] = useState<Stats | null>(null)
   const [limits, setLim] = useState<Limits>(getLimits)
+  const [skip, setSkipState] = useState<SkipSettings>(getSkip)
   const [msg, setMsg] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -105,6 +121,13 @@ function Home({ onStart }: { onStart: (queue: StudyCard[]) => void }) {
         {total ? `Los geht's (${total})` : 'Für heute fertig'}
       </button>
 
+      {!skip.placed && (
+        <button className="invite" onClick={onPlacement}>
+          <strong>Einstufung machen</strong>
+          <span>Ein kurzer Test überspringt die Wörter, die du schon kannst.</span>
+        </button>
+      )}
+
       <section className="topics">
         <h2>
           Themen <span className="count">{s ? `${s.learned} von ${s.total} Karten gesehen` : ''}</span>
@@ -135,6 +158,17 @@ function Home({ onStart }: { onStart: (queue: StudyCard[]) => void }) {
                       {r.p?.due ? ` · ${r.p.due} fällig` : ''}
                     </span>
                     <button
+                      className="skip"
+                      aria-pressed={skip.topics.includes(r.id)}
+                      title={skip.topics.includes(r.id) ? 'Wieder aufnehmen' : 'Thema überspringen'}
+                      onClick={() => {
+                        setSkipState(toggleTopicSkip(r.id))
+                        refresh()
+                      }}
+                    >
+                      {skip.topics.includes(r.id) ? 'übersprungen' : 'kann ich'}
+                    </button>
+                    <button
                       disabled={!r.p || (r.p.due === 0 && r.p.seen === r.p.total)}
                       onClick={() => start(r.id)}
                     >
@@ -164,6 +198,27 @@ function Home({ onStart }: { onStart: (queue: StudyCard[]) => void }) {
             onChange={(e) => updateLimit('grammatik', e.target.value)}
           />
         </label>
+        <div className="row">
+          <span>
+            Einstufung
+            {skip.knownWordRank
+              ? `: Wörter bis Rang ${skip.knownWordRank} übersprungen`
+              : ': noch nicht gemacht'}
+          </span>
+          <button onClick={onPlacement}>{skip.placed ? 'Wiederholen' : 'Starten'}</button>
+        </div>
+        {skip.knownWordRank > 0 && (
+          <button
+            onClick={() => {
+              const next = { ...getSkip(), knownWordRank: 0 }
+              setSkip(next)
+              setSkipState(next)
+              refresh()
+            }}
+          >
+            Übersprungene Wörter zurückholen
+          </button>
+        )}
         <p className="small">
           Dein Fortschritt liegt nur auf diesem Gerät. Eine Sicherung schützt ihn, falls der Browser Daten löscht.
         </p>
@@ -399,6 +454,133 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
           )}
         </section>
       )}
+    </main>
+  )
+}
+
+/**
+ * Placement check: walks up the frequency bands, six words each. A band you clearly know is
+ * skipped wholesale; the first band you do not know ends the check and everything above stays.
+ */
+function Placement({ onDone }: { onDone: () => void }) {
+  const [bands] = useState<Band[]>(() => placementBands())
+  const [band, setBand] = useState(0)
+  const [index, setIndex] = useState(0)
+  const [input, setInput] = useState('')
+  const [right, setRight] = useState(0)
+  const [knownRank, setKnownRank] = useState(0)
+  const [finished, setFinished] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const current = bands[band]
+  const card = current?.cards[index]
+
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [card])
+
+  const save = (rank: number) => {
+    setSkip({ ...getSkip(), knownWordRank: rank, placed: true })
+    setKnownRank(rank)
+    setFinished(true)
+  }
+
+  const answer = (correct: boolean) => {
+    const score = right + (correct ? 1 : 0)
+    setInput('')
+    if (index + 1 < current.cards.length) {
+      setRight(score)
+      setIndex(index + 1)
+      return
+    }
+    // Five of six right means this band is known; anything less ends the check here.
+    if (score >= 5 && band + 1 < bands.length) {
+      setRight(0)
+      setIndex(0)
+      setBand(band + 1)
+      setKnownRank(current.to)
+    } else {
+      save(score >= 5 ? current.to : current.from)
+    }
+  }
+
+  if (!bands.length) {
+    return (
+      <main>
+        <h1>Einstufung</h1>
+        <p>Für die Einstufung fehlen Wortkarten.</p>
+        <button className="primary big" onClick={onDone}>
+          Zurück
+        </button>
+      </main>
+    )
+  }
+
+  if (finished) {
+    const skipped = CARDS.filter((c) => c.rank !== undefined && c.rank <= knownRank).length
+    return (
+      <main className="done">
+        <h1>Einstufung fertig</h1>
+        <p className="score">
+          {knownRank
+            ? `${skipped} Wörter bis Rang ${knownRank} sind als bekannt markiert.`
+            : 'Es wird nichts übersprungen, du fängst von vorne an.'}
+        </p>
+        <p className="small">
+          Das lässt sich in den Einstellungen jederzeit zurücknehmen. Grammatikthemen kannst du im Themenbaum einzeln
+          auf "kann ich" setzen.
+        </p>
+        <button className="primary big" onClick={onDone}>
+          Zur Übersicht
+        </button>
+      </main>
+    )
+  }
+
+  return (
+    <main className="review">
+      <div className="progress">
+        <button className="link" onClick={() => save(knownRank)}>
+          Abbrechen
+        </button>
+        <span>
+          Häufigkeit {current.from + 1}–{current.to} · {index + 1}/{current.cards.length}
+        </span>
+      </div>
+
+      <article className="card">
+        <span className="tag">Einstufung</span>
+        <p className="prompt">{card.de}</p>
+      </article>
+
+      <input
+        ref={inputRef}
+        className="answer"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter') return
+          e.preventDefault()
+          answer(check(input, acceptedAnswers(card)) !== 'wrong')
+        }}
+        placeholder="Antwort"
+        lang="fr"
+        autoCapitalize="off"
+        autoCorrect="off"
+        autoComplete="off"
+        spellCheck={false}
+      />
+
+      <div className="grades">
+        <button onClick={() => answer(false)}>Kenne ich nicht</button>
+        <button className="primary" onClick={() => answer(check(input, acceptedAnswers(card)) !== 'wrong')}>
+          Weiter
+        </button>
+      </div>
+      <p className="small">
+        Sechs Wörter pro Häufigkeitsstufe. Fünf richtige überspringen die ganze Stufe, sonst hört die Einstufung hier
+        auf.
+      </p>
     </main>
   )
 }

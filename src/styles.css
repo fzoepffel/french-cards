@@ -460,3 +460,32 @@ button.link {
 .option.is-dim {
   opacity: 0.5;
 }
+
+.invite {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  border-style: dashed;
+  padding: 14px 16px;
+}
+
+.invite span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.section li {
+  grid-template-columns: 1fr auto auto auto;
+}
+
+button.skip {
+  font-size: 0.8rem;
+  padding: 6px 8px;
+  color: var(--muted);
+}
+
+button.skip[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}

@@ -17,7 +17,7 @@ if (!positionals.length) {
 }
 
 type Draft = Card & { status?: string; issues?: string[]; lemma?: string; rank?: number }
-const CARD_FIELDS = ['id', 'topic', 'format', 'de', 'fr', 'task', 'hint', 'options', 'answer', 'accept', 'note'] as const
+const CARD_FIELDS = ['id', 'topic', 'format', 'de', 'fr', 'task', 'hint', 'options', 'answer', 'accept', 'note', 'rank'] as const
 
 const deckPath = new URL('../src/data/cards.json', import.meta.url)
 const deck: Card[] = JSON.parse(readFileSync(deckPath, 'utf8'))
