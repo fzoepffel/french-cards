@@ -63,20 +63,52 @@ interface SessionResult {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' })
+  const primer = useRef<HTMLInputElement>(null)
+  /**
+   * iOS opens the keyboard only inside a real tap, and the first card of a round is
+   * rendered a tick after the tap that asks for it. Focusing this field during the tap
+   * opens the keyboard, and the card's answer field takes the focus over once it is
+   * there. It lives up here so it outlives the screen change: if the focused element
+   * disappears, the keyboard goes with it.
+   */
+  const openKeyboard = () => primer.current?.focus()
 
-  if (screen.name === 'review') {
-    return <Review queue={screen.queue} onFinish={(result) => setScreen({ name: 'done', result })} />
+  const view = () => {
+    if (screen.name === 'review') {
+      return <Review queue={screen.queue} onFinish={(result) => setScreen({ name: 'done', result })} />
+    }
+    if (screen.name === 'done') {
+      return <Done result={screen.result} onHome={() => setScreen({ name: 'home' })} />
+    }
+    if (screen.name === 'placement') {
+      return <Placement onDone={() => setScreen({ name: 'home' })} />
+    }
+    return (
+      <Home
+        onStart={(queue) => setScreen({ name: 'review', queue })}
+        onPlacement={() => setScreen({ name: 'placement' })}
+        openKeyboard={openKeyboard}
+      />
+    )
   }
-  if (screen.name === 'done') {
-    return <Done result={screen.result} onHome={() => setScreen({ name: 'home' })} />
-  }
-  if (screen.name === 'placement') {
-    return <Placement onDone={() => setScreen({ name: 'home' })} />
-  }
-  return <Home onStart={(queue) => setScreen({ name: 'review', queue })} onPlacement={() => setScreen({ name: 'placement' })} />
+
+  return (
+    <>
+      <input ref={primer} className="kb-primer" tabIndex={-1} aria-hidden inputMode="text" />
+      {view()}
+    </>
+  )
 }
 
-function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void; onPlacement: () => void }) {
+function Home({
+  onStart,
+  onPlacement,
+  openKeyboard,
+}: {
+  onStart: (queue: StudyCard[]) => void
+  onPlacement: () => void
+  openKeyboard: () => void
+}) {
   const [s, setS] = useState<Stats | null>(null)
   const [limits, setLim] = useState<Limits>(getLimits)
   const [skip, setSkipState] = useState<SkipSettings>(getSkip)
@@ -100,6 +132,8 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
   const start = async (topics?: string[]) => {
     const queue = await buildQueue(topics)
     if (queue.length) onStart(queue)
+    // Nothing to practise: let the keyboard that the tap opened go again.
+    else (document.activeElement as HTMLElement | null)?.blur()
   }
 
   const updateLimit = (key: keyof Limits, value: string) => {
@@ -228,12 +262,13 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
       ) : firstRun ? (
         <section className="firstrun">
           <h2>{t('Wie möchtest du anfangen?')}</h2>
-          <button className="big primary" onClick={onPlacement}>
+          <button className="big primary" onPointerDown={openKeyboard} onClick={onPlacement}>
             {t('Einstufung machen')}
             <small>{t('Ein kurzer Test überspringt, was du schon kannst')}</small>
           </button>
           <button
             className="big"
+            onPointerDown={openKeyboard}
             onClick={() => {
               markPlaced()
               setSkipState(getSkip())
@@ -247,9 +282,11 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
       ) : (
         <button
           className="primary big"
+          onPointerDown={openKeyboard}
           onClick={async () => {
             const queue = total ? await buildQueue() : await buildExtraQueue(10)
             if (queue.length) onStart(queue)
+            else (document.activeElement as HTMLElement | null)?.blur()
           }}
         >
           {total ? t(doneToday ? 'Heutige Runde fortsetzen' : 'Heutige Runde starten') : t('Noch eine Runde')}
@@ -317,6 +354,7 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
                   className="play"
                   disabled={!playable}
                   aria-label={t('{title} üben', { title: section.title })}
+                  onPointerDown={openKeyboard}
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
@@ -342,6 +380,7 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
                         <button
                           className="topic-main"
                           disabled={empty || complete || skipped}
+                          onPointerDown={openKeyboard}
                           onClick={() => start([r.id])}
                           aria-label={t('{title} üben', { title: r.title })}
                         >

@@ -876,6 +876,20 @@ button.danger-link {
  * phone the software keyboard covers that spot, so the bar is lifted by however
  * much of the window the keyboard takes (see useKeyboardInset).
  */
+/* Off-screen, only ever focused to bring the keyboard up before a round starts. */
+.kb-primer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  font-size: 16px;
+  pointer-events: none;
+}
+
 .dock-layer {
   position: fixed;
   left: 0;
