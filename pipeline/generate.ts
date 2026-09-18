@@ -145,6 +145,7 @@ Rules for every card:
 - Fields a format does not use are empty strings or empty arrays.
 - French sentences use normal capitalisation and French punctuation, with a space before ? and !.
 - Cover different aspects of the topic and different verbs and nouns. Include the cases where German speakers typically go wrong.
+- Never ask for a bare function word, conjunction or particle as a translate card: German "als ob" or "sobald" on their own can be read several ways. Put those in a sentence with gap or sentence format instead.
 - Mix at least three formats when the topic allows it.
 - Never repeat a sentence or test the same thing as one of the existing cards.`
 
