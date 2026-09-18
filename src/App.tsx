@@ -72,6 +72,15 @@ export default function App() {
    * disappears, the keyboard goes with it.
    */
   const openKeyboard = () => primer.current?.focus()
+  const closeKeyboard = () => {
+    if (document.activeElement === primer.current) primer.current?.blur()
+  }
+
+  // Only the screens that type may hold the keyboard open. Coming back from a round
+  // must not leave the hidden field with the focus.
+  useEffect(() => {
+    if (screen.name !== 'review' && screen.name !== 'placement') closeKeyboard()
+  })
 
   const view = () => {
     if (screen.name === 'review') {
@@ -88,6 +97,7 @@ export default function App() {
         onStart={(queue) => setScreen({ name: 'review', queue })}
         onPlacement={() => setScreen({ name: 'placement' })}
         openKeyboard={openKeyboard}
+        closeKeyboard={closeKeyboard}
       />
     )
   }
@@ -104,10 +114,12 @@ function Home({
   onStart,
   onPlacement,
   openKeyboard,
+  closeKeyboard,
 }: {
   onStart: (queue: StudyCard[]) => void
   onPlacement: () => void
   openKeyboard: () => void
+  closeKeyboard: () => void
 }) {
   const [s, setS] = useState<Stats | null>(null)
   const [limits, setLim] = useState<Limits>(getLimits)
@@ -214,7 +226,12 @@ function Home({
   const firstRun = !!s && s.learned === 0 && !skip.placed
 
   return (
-    <main className="home">
+    <main
+      className="home"
+      onPointerDownCapture={(e) => {
+        if (!(e.target as HTMLElement).closest('[data-starts-round]')) closeKeyboard()
+      }}
+    >
       <header className="masthead">
         <Mark />
         <div>
@@ -262,13 +279,13 @@ function Home({
       ) : firstRun ? (
         <section className="firstrun">
           <h2>{t('Wie möchtest du anfangen?')}</h2>
-          <button className="big primary" onPointerDown={openKeyboard} onClick={onPlacement}>
+          <button className="big primary" data-starts-round onPointerDown={openKeyboard} onClick={onPlacement}>
             {t('Einstufung machen')}
             <small>{t('Ein kurzer Test überspringt, was du schon kannst')}</small>
           </button>
           <button
             className="big"
-            onPointerDown={openKeyboard}
+            data-starts-round onPointerDown={openKeyboard}
             onClick={() => {
               markPlaced()
               setSkipState(getSkip())
@@ -282,7 +299,7 @@ function Home({
       ) : (
         <button
           className="primary big"
-          onPointerDown={openKeyboard}
+          data-starts-round onPointerDown={openKeyboard}
           onClick={async () => {
             const queue = total ? await buildQueue() : await buildExtraQueue(10)
             if (queue.length) onStart(queue)
@@ -354,7 +371,7 @@ function Home({
                   className="play"
                   disabled={!playable}
                   aria-label={t('{title} üben', { title: section.title })}
-                  onPointerDown={openKeyboard}
+                  data-starts-round onPointerDown={openKeyboard}
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
@@ -380,7 +397,7 @@ function Home({
                         <button
                           className="topic-main"
                           disabled={empty || complete || skipped}
-                          onPointerDown={openKeyboard}
+                          data-starts-round onPointerDown={openKeyboard}
                           onClick={() => start([r.id])}
                           aria-label={t('{title} üben', { title: r.title })}
                         >
@@ -749,7 +766,9 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
 
   useEffect(() => {
     const el = inputRef.current
-    el?.focus()
+    // A card with buttons instead of a field has no use for the keyboard.
+    if (el) el.focus()
+    else (document.activeElement as HTMLElement | null)?.blur()
     if (el instanceof HTMLTextAreaElement) {
       el.style.height = 'auto'
       el.style.height = `${el.scrollHeight}px`
