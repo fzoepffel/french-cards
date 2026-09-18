@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 
 export interface ConfirmProps {
   title: string
@@ -15,6 +16,10 @@ export interface ConfirmProps {
 /**
  * In-app confirmation. Used for every action that takes cards out of the rotation or
  * overwrites progress, so nothing irreversible happens on a single tap.
+ *
+ * Rendered into <body> rather than in place: an animated ancestor becomes the
+ * containing block for position: fixed in Safari, which left the dialog sitting in
+ * the middle of the page instead of the middle of the screen.
  */
 export function Confirm({ title, body, confirmLabel, cancelLabel = 'Abbrechen', destructive, onConfirm, onCancel }: ConfirmProps) {
   const cancelRef = useRef<HTMLButtonElement>(null)
@@ -25,10 +30,16 @@ export function Confirm({ title, body, confirmLabel, cancelLabel = 'Abbrechen', 
       if (e.key === 'Escape') onCancel()
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    // hold the page still while the dialog is open
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = previous
+    }
   }, [onCancel])
 
-  return (
+  return createPortal(
     <div className="backdrop" onClick={onCancel}>
       <div className="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dlg-title" onClick={(e) => e.stopPropagation()}>
         <h2 id="dlg-title">{title}</h2>
@@ -42,6 +53,7 @@ export function Confirm({ title, body, confirmLabel, cancelLabel = 'Abbrechen', 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
