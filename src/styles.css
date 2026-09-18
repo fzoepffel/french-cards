@@ -897,6 +897,12 @@ button.danger-link {
   padding-bottom: 0;
 }
 
+/* the placement check has no bar at the foot, it just scrolls */
+.review.placement {
+  overflow-y: auto;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 20px);
+}
+
 .scroller {
   flex: 1;
   min-height: 0;
@@ -941,29 +947,83 @@ button.danger-link {
   border-top: var(--stroke) solid var(--outline);
 }
 
-/* With the keyboard up the card has little room left, so the bar gives some back:
-   no home indicator to clear, tighter spacing, and accents small enough for two rows. */
-.dock.compact {
+/*
+ * With the keyboard up, Safari leaves about 400 points for the whole screen, so the
+ * card and the bar both give ground: one row of accents that scrolls sideways, a
+ * shorter button, and a card with less padding around it.
+ */
+.review.compact .dock {
   padding-bottom: 12px;
   padding-top: 10px;
   gap: 8px;
 }
 
-.dock.compact .answer {
+.review.compact .answer {
   font-size: 1.15rem;
-  padding: 11px 15px;
+  padding: 10px 14px;
 }
 
-.dock.compact .accents {
+.review.compact .accents {
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: 6px;
+  scrollbar-width: none;
 }
 
-.dock.compact .accents button {
-  min-width: 40px;
-  min-height: 38px;
-  padding: 5px 0;
-  font-size: 1.05rem;
+.review.compact .accents::-webkit-scrollbar {
+  display: none;
 }
+
+.review.compact .accents button {
+  flex: none;
+  min-width: 38px;
+  min-height: 36px;
+  padding: 4px 0;
+  font-size: 1rem;
+}
+
+.review.compact button.big {
+  padding: 12px;
+  min-height: 46px;
+  font-size: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.review.compact {
+  gap: 10px;
+  padding-top: calc(env(safe-area-inset-top) + 8px);
+}
+
+.review.compact .card {
+  padding: 12px 14px 14px;
+  box-shadow:
+    6px 7px 0 var(--accent),
+    6px 7px 0 var(--stroke) var(--outline);
+}
+
+.review.compact .tag {
+  font-size: 0.6rem;
+  padding: 3px 9px;
+  margin-bottom: 8px;
+}
+
+.review.compact .scroller {
+  gap: 10px;
+}
+
+.review.compact .prompt {
+  font-size: 1.25rem;
+}
+
+.review.compact .bubble {
+  padding: 10px 13px;
+}
+
+.review.compact .grades button {
+  min-height: 46px;
+  padding: 8px 10px;
+}
+
 
 .progress {
   display: flex;

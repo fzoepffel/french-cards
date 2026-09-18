@@ -880,7 +880,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const showSource = card.format === 'rewrite' || (card.fr && !card.fr.includes('___') && card.format !== 'fix')
 
   return (
-    <main className="review">
+    <main className={`review ${kbOpen ? 'compact' : ''}`}>
       <div className="progress">
         <button className="link" onClick={() => (result.current.reviewed ? setConfirmEnd(true) : onFinish(result.current))}>
           {t('Runde beenden')}
@@ -988,7 +988,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
       {/* The answer field and its buttons sit at the foot of the frame, which ends where
           the keyboard begins, so nothing has to be lifted out of the way. */}
       {!(choose && !verdict) && (
-        <div className={`dock ${kbOpen ? 'compact' : ''}`}>
+        <div className="dock">
           {!choose &&
             (multiline ? (
               <textarea
@@ -1219,7 +1219,7 @@ function Placement({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <main className="review">
+    <main className="review placement">
       <div className="progress">
         <button className="link" onClick={() => setLeaving(true)}>
           Abbrechen
