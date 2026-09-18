@@ -62,7 +62,6 @@ interface SessionResult {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' })
-  const view = useViewport()
   const primer = useRef<HTMLInputElement>(null)
   /**
    * iOS opens the keyboard only inside a real tap, and the first card of a round is
@@ -103,10 +102,10 @@ export default function App() {
   }
 
   return (
-    <div id="frame" className="frame" style={{ height: view.height, transform: `translateY(${view.offsetTop}px)` }}>
+    <>
       <input ref={primer} className="kb-primer" tabIndex={-1} aria-hidden inputMode="text" />
       {screenView()}
-    </div>
+    </>
   )
 }
 
@@ -642,44 +641,6 @@ function Home({
 
 const ACCENTS = ['é', 'è', 'ê', 'à', 'â', 'ç', 'ù', 'û', 'î', 'ï', 'ô', 'œ', 'ë']
 
-/**
- * The visible part of the page, measured from the visual viewport alone.
- *
- * Safari on iOS shrinks only the visual viewport for the keyboard, never the layout
- * viewport, and does not support interactive-widget, so neither innerHeight nor dvh
- * says where the keyboard begins. The app is drawn into a frame the size of the
- * visual viewport instead, and everything inside it is ordinary layout: the foot of
- * the frame is the top of the keyboard, whether or not one is open.
- */
-function useViewport() {
-  const read = () => {
-    const vv = window.visualViewport
-    if (!vv) return { height: window.innerHeight, offsetTop: 0 }
-    return { height: vv.height, offsetTop: vv.offsetTop }
-  }
-  const [box, setBox] = useState(read)
-  useEffect(() => {
-    const update = () => setBox(read())
-    const vv = window.visualViewport
-    vv?.addEventListener('resize', update)
-    vv?.addEventListener('scroll', update)
-    window.addEventListener('orientationchange', update)
-    update()
-    return () => {
-      vv?.removeEventListener('resize', update)
-      vv?.removeEventListener('scroll', update)
-      window.removeEventListener('orientationchange', update)
-    }
-  }, [])
-  return box
-}
-
-/** True once the viewport has shrunk well below the tallest it has been: a keyboard. */
-function useKeyboardOpen(height: number) {
-  const tallest = useRef(height)
-  tallest.current = Math.max(tallest.current, height)
-  return height < tallest.current - 120
-}
 
 /**
  * The four mastery levels, weakest first. The ranges are the review interval the
@@ -783,10 +744,22 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
 
   const selfGraded = card.format === 'sentence'
   const choose = card.format === 'choose'
-  const view = useViewport()
-  const kbOpen = useKeyboardOpen(view.height)
-  // ?debug=1 puts the layout numbers on screen, the only way to see them on a phone
-  const debug = new URLSearchParams(location.search).has('debug')
+  // The field having the focus means the keyboard is up. No viewport measurement is
+  // involved: on iOS those numbers are unreliable while the keyboard is showing.
+  const [typing, setTyping] = useState(false)
+  const dockRef = useRef<HTMLDivElement>(null)
+  // Only a software keyboard takes room away, so a mouse and a real keyboard keep
+  // the roomy layout even while the field has the focus.
+  const [touch] = useState(() => window.matchMedia('(pointer: coarse)').matches)
+
+  /**
+   * The browser scrolls the focused field into view, which can leave the button below
+   * it under the keyboard. Asking for the whole bar instead brings the button along.
+   * It waits for the keyboard animation, and the browser does the arithmetic.
+   */
+  const showBar = () => {
+    setTimeout(() => dockRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }), 350)
+  }
   // Typed cards keep the keyboard open for the whole round: every button below
   // refuses focus, so the field never loses it and iOS never folds the keyboard away.
   const keepKeyboard = (e: React.PointerEvent) => {
@@ -799,8 +772,13 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   useEffect(() => {
     const el = inputRef.current
     // A card with buttons instead of a field has no use for the keyboard.
-    if (el) el.focus()
-    else (document.activeElement as HTMLElement | null)?.blur()
+    if (el) {
+      el.focus()
+      setTyping(document.activeElement === el)
+    } else {
+      ;(document.activeElement as HTMLElement | null)?.blur()
+      setTyping(false)
+    }
     if (el instanceof HTMLTextAreaElement) {
       el.style.height = 'auto'
       el.style.height = `${el.scrollHeight}px`
@@ -820,6 +798,9 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
     if (verdict) return
     // Nothing typed means the answer is not known; show it and count the card as missed.
     setVerdict(blank ? 'wrong' : check(input, answers))
+    // The answer, the note and the buttons need the room the keyboard was taking.
+    inputRef.current?.blur()
+    setTyping(false)
   }
 
   const pick = (option: string) => {
@@ -830,6 +811,11 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
 
   const next = async (g: Grade) => {
     if (busy) return
+    // Focus while the tap is still being handled: iOS opens the keyboard only then.
+    if (!choose) {
+      inputRef.current?.focus()
+      setTyping(true)
+    }
     setBusy(true)
     await grade(card.id, g)
     const r = result.current
@@ -880,15 +866,13 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const showSource = card.format === 'rewrite' || (card.fr && !card.fr.includes('___') && card.format !== 'fix')
 
   return (
-    <main className={`review ${kbOpen ? 'compact' : ''}`}>
+    <main className={`review ${typing && touch ? 'typing' : ''}`}>
       <div className="progress">
         <button className="link" onClick={() => (result.current.reviewed ? setConfirmEnd(true) : onFinish(result.current))}>
           {t('Runde beenden')}
         </button>
         <span>
-          {debug
-            ? `vv${Math.round(view.height)} top${Math.round(view.offsetTop)} ih${window.innerHeight}`
-            : t(queue.length === 1 ? 'noch {n} Karte' : 'noch {n} Karten', { n: queue.length })}
+          {t(queue.length === 1 ? 'noch {n} Karte' : 'noch {n} Karten', { n: queue.length })}
         </span>
       </div>
 
@@ -988,7 +972,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
       {/* The answer field and its buttons sit at the foot of the frame, which ends where
           the keyboard begins, so nothing has to be lifted out of the way. */}
       {!(choose && !verdict) && (
-        <div className="dock">
+        <div className="dock" ref={dockRef}>
           {!choose &&
             (multiline ? (
               <textarea
@@ -1003,6 +987,11 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
                   e.target.style.height = `${e.target.scrollHeight}px`
                 }}
                 onKeyDown={onKey}
+                onFocus={() => {
+                  setTyping(true)
+                  showBar()
+                }}
+                onBlur={() => setTyping(false)}
                 placeholder={t(PLACEHOLDER[card.format] ?? 'Antwort')}
                 lang="fr"
                 autoCapitalize="off"
@@ -1018,6 +1007,11 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
                 value={input}
                 onChange={(e) => !verdict && setInput(e.target.value)}
                 onKeyDown={onKey}
+                onFocus={() => {
+                  setTyping(true)
+                  showBar()
+                }}
+                onBlur={() => setTyping(false)}
                 placeholder={t(PLACEHOLDER[card.format] ?? 'Antwort')}
                 lang="fr"
                 autoCapitalize="off"
