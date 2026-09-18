@@ -13,7 +13,7 @@ export function setLang(next: Lang) {
 
 const EN: Record<string, string> = {
   // home
-  'Französisch: Vokabeln, Formen, Grammatik': 'French: words, forms, grammar',
+  'Vokabeln, Formen, Grammatik': 'Words, forms, grammar',
   'zur Wiederholung': 'to review',
   'neue Wörter': 'new words',
   'neue Grammatik': 'new grammar',

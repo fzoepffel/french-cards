@@ -1285,3 +1285,22 @@ textarea.answer {
   border: var(--stroke) dashed var(--line);
   box-shadow: none;
 }
+
+/* Wordmark plus the language in a script face */
+.lockup {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.script {
+  font-family: 'Snell Roundhand', 'Savoye LET', 'Apple Chancery', 'Segoe Script', 'Brush Script MT', cursive;
+  font-size: 1.8rem;
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: var(--accent);
+  transform: rotate(-5deg);
+  transform-origin: left bottom;
+  white-space: nowrap;
+  line-height: 1;
+}

@@ -182,8 +182,13 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
         <Mark />
         <div>
           <h1 className="visually-hidden">Neno</h1>
-          <Wordmark />
-          <p className="sub">{t('Französisch: Vokabeln, Formen, Grammatik')}</p>
+          <div className="lockup">
+            <Wordmark />
+            <span className="script" lang="fr">
+              Français
+            </span>
+          </div>
+          <p className="sub">{t('Vokabeln, Formen, Grammatik')}</p>
         </div>
         {days > 0 && (
           <span className="streak" title={t('Tage in Folge gelernt')}>
