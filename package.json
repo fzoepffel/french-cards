@@ -18,7 +18,8 @@
     "cards:recheck": "node pipeline/recheck.ts",
     "test": "node scripts/check.test.ts",
     "cards:contextify": "node --env-file-if-exists=.env pipeline/contextify.ts",
-    "cards:verify": "node --env-file-if-exists=.env pipeline/verify.ts"
+    "cards:verify": "node --env-file-if-exists=.env pipeline/verify.ts",
+    "cards:translate": "node --env-file-if-exists=.env pipeline/translate-deck.ts"
   },
   "dependencies": {
     "dexie": "^4.4.6",

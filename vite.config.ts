@@ -9,6 +9,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['apple-touch-icon.png', 'icon.svg'],
+      workbox: {
+        // decks are fetched at runtime; precache them so the app works offline
+        globPatterns: ['**/*.{js,css,html,svg,png,json}'],
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+      },
       manifest: {
         name: 'Neno: Französisch',
         short_name: 'Neno',

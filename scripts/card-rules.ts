@@ -1,5 +1,17 @@
 // Shared card checks, used by the validator and the content pipeline.
-import { SECTIONS } from '../src/data/topics.ts'
+// Topics live in the deck files now, so they are read from the German deck,
+// which is the source the other editions are built from.
+import { readFileSync } from 'node:fs'
+
+interface Section {
+  id: string
+  title: string
+  topics: { id: string; title: string }[]
+}
+
+export const SECTIONS: Section[] = JSON.parse(
+  readFileSync(new URL('../public/decks/fr-de.json', import.meta.url), 'utf8'),
+).sections
 
 export const FORMATS = ['translate', 'gap', 'conjugate', 'rewrite', 'choose', 'fix', 'sentence'] as const
 export type Format = (typeof FORMATS)[number]

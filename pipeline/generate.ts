@@ -12,8 +12,8 @@ import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { parseArgs } from 'node:util'
 import * as z from 'zod/v4'
-import { FORMATS, checkCard, dedupeKey, headword, sameWord, type Card } from '../scripts/card-rules.ts'
-import { SECTIONS } from '../src/data/topics.ts'
+import { FORMATS, SECTIONS, checkCard, dedupeKey, headword, sameWord, type Card } from '../scripts/card-rules.ts'
+
 import { buildWordlist, loadRows, type Lemma } from './lexique.ts'
 
 const MODEL = 'claude-opus-5'

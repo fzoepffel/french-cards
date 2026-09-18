@@ -6,8 +6,8 @@ import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { parseArgs } from 'node:util'
 import * as z from 'zod/v4'
-import { checkCard, type Card } from '../scripts/card-rules.ts'
-import { SECTIONS } from '../src/data/topics.ts'
+import { SECTIONS, checkCard, type Card } from '../scripts/card-rules.ts'
+
 
 const { values } = parseArgs({
   options: { 'dry-run': { type: 'boolean', default: false }, limit: { type: 'string', default: '60' } },

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Rating, type Grade } from 'ts-fsrs'
 import {
   CARDS,
+  SECTIONS,
   FORMAT_LABEL,
   acceptedAnswers,
   genderOf,
@@ -12,10 +13,12 @@ import {
   type StudyCard,
 } from './cards'
 import { check, type Verdict } from './check'
+import { t } from './i18n'
 import { Confirm, type ConfirmProps } from './Confirm'
 import { canSpeak, getAutoSpeak, hasFrenchVoice, setAutoSpeak, speak } from './speak'
+import { PAIRS, getPair, setPair } from './deck'
 import { Burst, Check, Mark, Ring, Seal, SpeakerIcon, Wordmark } from './Bits'
-import { SECTIONS } from './data/topics'
+
 import {
   buildExtraQueue,
   buildQueue,
@@ -87,6 +90,7 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
   const [days, setDays] = useState(0)
   const [theme, setTheme] = useState<Theme>(getTheme)
   const [autoSpeak, setAuto] = useState(getAutoSpeak)
+  const [pair] = useState(getPair)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const refresh = useCallback(() => {
@@ -114,23 +118,23 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
     a.download = `neno-sicherung-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(a.href)
-    setMsg('Sicherung gespeichert. Sie liegt bei deinen Downloads.')
+    setMsg(t('Sicherung gespeichert. Sie liegt bei deinen Downloads.'))
   }
 
   const upload = async (file: File) => {
     setAsk({
-      title: 'Sicherung laden?',
-      body: 'Das ersetzt deinen gesamten Fortschritt auf diesem Gerät durch den Stand aus der Datei. Was du seitdem gelernt hast, geht verloren.',
-      confirmLabel: 'Ersetzen',
+      title: t('Sicherung laden?'),
+      body: t('Das ersetzt deinen gesamten Fortschritt auf diesem Gerät durch den Stand aus der Datei. Was du seitdem gelernt hast, geht verloren.'),
+      confirmLabel: t('Ersetzen'),
       destructive: true,
       onConfirm: async () => {
         setAsk(null)
         try {
           const n = await importBackup(await file.text())
-          setMsg(`${n} Karten aus der Sicherung übernommen.`)
+          setMsg(t('{n} Karten aus der Sicherung übernommen.', { n }))
           refresh()
         } catch (e) {
-          setMsg(e instanceof Error ? e.message : 'Die Datei konnte nicht gelesen werden.')
+          setMsg(e instanceof Error ? e.message : t('Die Datei konnte nicht gelesen werden.'))
         }
       },
     })
@@ -139,21 +143,24 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
   const skipTopic = (id: string, title: string) => {
     if (skip.topics.includes(id)) {
       setSkipState(toggleTopicSkip(id))
-      setMsg(`"${title}" ist wieder dabei.`)
+      setMsg(t('"{title}" ist wieder dabei.', { title }))
       refresh()
       return
     }
     setAsk({
-      title: `"${title}" überspringen?`,
-      body: `${cardsInTopic(id)} Karten aus diesem Thema kommen dann nicht mehr dran. Schon gelernte Karten bleiben gespeichert, und du kannst das Thema hier jederzeit wieder aufnehmen.`,
-      confirmLabel: 'Überspringen',
+      title: t('"{title}" überspringen?', { title }),
+      body: t(
+        '{n} Karten aus diesem Thema kommen dann nicht mehr dran. Schon gelernte Karten bleiben gespeichert, und du kannst das Thema hier jederzeit wieder aufnehmen.',
+        { n: cardsInTopic(id) },
+      ),
+      confirmLabel: t('Überspringen'),
       destructive: true,
       onConfirm: () => {
         setAsk(null)
         setSkipState(toggleTopicSkip(id))
         refresh()
         setUndo({
-          text: `"${title}" wird übersprungen.`,
+          text: t('"{title}" wird übersprungen.', { title }),
           run: () => {
             setSkipState(toggleTopicSkip(id))
             refresh()
@@ -176,12 +183,12 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
         <div>
           <h1 className="visually-hidden">Neno</h1>
           <Wordmark />
-          <p className="sub">Französisch: Vokabeln, Formen, Grammatik</p>
+          <p className="sub">{t('Französisch: Vokabeln, Formen, Grammatik')}</p>
         </div>
         {days > 0 && (
-          <span className="streak" title="Tage in Folge gelernt">
+          <span className="streak" title={t('Tage in Folge gelernt')}>
             <b>{days}</b>
-            {days === 1 ? 'Tag' : 'Tage'}
+            {t(days === 1 ? 'Tag' : 'Tage')}
           </span>
         )}
       </header>
@@ -191,16 +198,13 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
         <div className="legend">
           <div>
             <span className="dot due" />
-            <b>{s?.due ?? '·'}</b> zur Wiederholung
-          </div>
+            <b>{s?.due ?? '·'}</b>{t('zur Wiederholung')}</div>
           <div>
             <span className="dot word" />
-            <b>{s?.newLeft.wort ?? '·'}</b> neue Wörter
-          </div>
+            <b>{s?.newLeft.wort ?? '·'}</b>{t('neue Wörter')}</div>
           <div>
             <span className="dot grammar" />
-            <b>{s?.newLeft.grammatik ?? '·'}</b> neue Grammatik
-          </div>
+            <b>{s?.newLeft.grammatik ?? '·'}</b>{t('neue Grammatik')}</div>
         </div>
       </section>
 
@@ -208,10 +212,8 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
         <div className="big placeholder" aria-hidden />
       ) : firstRun ? (
         <section className="firstrun">
-          <h2>Wie möchtest du anfangen?</h2>
-          <button className="big primary" onClick={onPlacement}>
-            Einstufung machen
-            <small>Ein kurzer Test überspringt, was du schon kannst</small>
+          <h2>{t('Wie möchtest du anfangen?')}</h2>
+          <button className="big primary" onClick={onPlacement}>{t('Einstufung machen')}<small>{t('Ein kurzer Test überspringt, was du schon kannst')}</small>
           </button>
           <button
             className="big"
@@ -220,9 +222,7 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
               setSkipState(getSkip())
               start()
             }}
-          >
-            Von vorne anfangen
-            <small>Bei den häufigsten Wörtern beginnen</small>
+          >{t('Von vorne anfangen')}<small>{t('Bei den häufigsten Wörtern beginnen')}</small>
           </button>
         </section>
       ) : (
@@ -233,27 +233,28 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
             if (queue.length) onStart(queue)
           }}
         >
-          {total ? `Heutige Runde starten (${total} Karten)` : 'Noch eine Runde (10 Karten)'}
+          {total ? t('Heutige Runde starten ({n} Karten)', { n: total }) : t('Noch eine Runde (10 Karten)')}
         </button>
       )}
       {!s || firstRun ? null : total ? (
         <p className="small center">
-          Du tippst die französische Antwort. Falsche Karten kommen am Ende der Runde noch einmal.
+          {t('Du tippst die französische Antwort. Falsche Karten kommen am Ende der Runde noch einmal.')}
         </p>
       ) : (
         <p className="small center">
-          Dein Tagespensum ist geschafft. Eine Extra-Runde nimmt zusätzliche Karten vor, ohne dein Pensum für morgen
-          zu ändern.
+          {t(
+            'Dein Tagespensum ist geschafft. Eine Extra-Runde nimmt zusätzliche Karten vor, ohne dein Pensum für morgen zu ändern.',
+          )}
         </p>
       )}
 
       <section className="topics">
-        <h2>
-          Themen <span className="count">{s ? `${s.learned} von ${s.total} Karten schon gesehen` : ''}</span>
+        <h2>{t('Themen')}<span className="count">{s ? t('{seen} von {total} Karten schon gesehen', { seen: s.learned, total: s.total }) : ''}</span>
         </h2>
         <p className="small">
-          Tippe ein Thema an, um nur daraus zu üben. Das Häkchen daneben heißt "kann ich schon" und nimmt das Thema aus
-          der Tagesrunde.
+          {t(
+            'Tippe ein Thema an, um nur daraus zu üben. Das Häkchen daneben heißt "kann ich schon" und nimmt das Thema aus der Tagesrunde.',
+          )}
         </p>
         {SECTIONS.map((section, i) => {
           const rows = section.topics.map((t) => ({ ...t, p: s?.topics.get(t.id) }))
@@ -279,16 +280,16 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
                         className="topic-main"
                         disabled={empty || complete || skipped}
                         onClick={() => start(r.id)}
-                        aria-label={`${r.title} üben`}
+                        aria-label={t('{title} üben', { title: r.title })}
                       >
                         <span className="topic-head">
                           <span>{r.title}</span>
                           <span className="count">
                             {skipped
-                              ? 'übersprungen'
+                              ? t('übersprungen')
                               : complete
-                                ? 'alles dran'
-                                : `${p?.seen ?? 0}/${p?.total ?? 0}${p?.due ? ` · ${p.due} fällig` : ''}`}
+                                ? t('alles dran')
+                                : `${p?.seen ?? 0}/${p?.total ?? 0}${p?.due ? ` · ${t('{n} fällig', { n: p.due })}` : ''}`}
                           </span>
                         </span>
                         <span className={`bar ${complete ? 'done' : ''}`} aria-hidden>
@@ -298,7 +299,7 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
                       <button
                         className="icon"
                         aria-pressed={skipped}
-                        aria-label={skipped ? `${r.title} wieder aufnehmen` : `${r.title} kann ich schon`}
+                        aria-label={skipped ? t('{title} wieder aufnehmen', { title: r.title }) : t('{title} kann ich schon', { title: r.title })}
                         onClick={() => skipTopic(r.id, r.title)}
                       >
                         <Check />
@@ -313,18 +314,15 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
       </section>
 
       <details className="settings">
-        <summary>Einstellungen</summary>
-        <label className="row">
-          Neue Wörter pro Tag
-          <input type="number" min={0} max={100} value={limits.wort} onChange={(e) => updateLimit('wort', e.target.value)} />
+        <summary>{t('Einstellungen')}</summary>
+        <label className="row">{t('Neue Wörter pro Tag')}<input type="number" min={0} max={100} value={limits.wort} onChange={(e) => updateLimit('wort', e.target.value)} />
         </label>
         <p className="small">
-          So viele neue Karten kommen pro Tag dazu. Wiederholungen sind davon nicht betroffen, die richten sich danach,
-          wie gut du eine Karte kannst.
+          {t(
+            'So viele neue Karten kommen pro Tag dazu. Wiederholungen sind davon nicht betroffen, die richten sich danach, wie gut du eine Karte kannst.',
+          )}
         </p>
-        <label className="row">
-          Neue Grammatikkarten pro Tag
-          <input
+        <label className="row">{t('Neue Grammatikkarten pro Tag')}<input
             type="number"
             min={0}
             max={100}
@@ -336,36 +334,36 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
           <span>
             Einstufung
             {skip.knownWordRank
-              ? `: Wörter bis Rang ${skip.knownWordRank} übersprungen`
-              : ': noch nicht gemacht'}
+              ? t(': Wörter bis Rang {rank} übersprungen', { rank: skip.knownWordRank })
+              : t(': noch nicht gemacht')}
           </span>
-          <button onClick={onPlacement}>{skip.placed ? 'Wiederholen' : 'Starten'}</button>
+          <button onClick={onPlacement}>{t(skip.placed ? 'Wiederholen' : 'Starten')}</button>
         </div>
         {skip.knownWordRank > 0 && (
           <button
             onClick={() =>
               setAsk({
-                title: 'Übersprungene Wörter zurückholen?',
-                body: `${wordsUpToRank(skip.knownWordRank)} Wörter aus der Einstufung kommen dann wieder in die Tagesrunde.`,
-                confirmLabel: 'Zurückholen',
+                title: t('Übersprungene Wörter zurückholen?'),
+                body: t('{n} Wörter aus der Einstufung kommen dann wieder in die Tagesrunde.', {
+                  n: wordsUpToRank(skip.knownWordRank),
+                }),
+                confirmLabel: t('Zurückholen'),
                 onConfirm: () => {
                   const next = { ...getSkip(), knownWordRank: 0 }
                   setSkip(next)
                   setSkipState(next)
                   setAsk(null)
-                  setMsg('Die übersprungenen Wörter sind wieder dabei.')
+                  setMsg(t('Die übersprungenen Wörter sind wieder dabei.'))
                   refresh()
                 },
               })
             }
-          >
-            Übersprungene Wörter zurückholen
-          </button>
+          >{t('Übersprungene Wörter zurückholen')}</button>
         )}
         {canSpeak() && (
           <>
             <label className="row">
-              <span>Aussprache automatisch</span>
+              <span>{t('Aussprache automatisch')}</span>
               <input
                 type="checkbox"
                 className="switch"
@@ -378,34 +376,65 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
               />
             </label>
             <p className="small">
-              Die Stimme kommt vom Gerät, es wird nichts heruntergeladen.
-              {!hasFrenchVoice() && ' Auf diesem Gerät ist noch keine französische Stimme installiert.'}
+              {t('Die Stimme kommt vom Gerät, es wird nichts heruntergeladen.')}
+              {!hasFrenchVoice() && t(' Auf diesem Gerät ist noch keine französische Stimme installiert.')}
             </p>
           </>
         )}
         <div className="row">
-          <span>Aussehen</span>
-          <div className="segmented" role="group" aria-label="Aussehen">
-            {(['system', 'light', 'dark'] as Theme[]).map((t) => (
+          <span>{t('Sprache')}</span>
+          <div className="segmented" role="group" aria-label={t('Sprache')}>
+            {PAIRS.map((p) => (
               <button
-                key={t}
-                aria-pressed={theme === t}
+                key={p.id}
+                aria-pressed={pair === p.id}
                 onClick={() => {
-                  setTheme(t)
-                  applyTheme(t)
+                  if (p.id === pair) return
+                  setAsk({
+                    title: t('Sprache wechseln?'),
+                    body: t(
+                      'Die App stellt auf {language} um. Dein Fortschritt wird dabei gelöscht, weil die englische Ausgabe eigene Karten hat.',
+                      { language: p.label },
+                    ),
+                    confirmLabel: t('Umstellen und zurücksetzen'),
+                    destructive: true,
+                    onConfirm: async () => {
+                      await resetProgress()
+                      setSkip({ knownWordRank: 0, topics: [], placed: false })
+                      setPair(p.id)
+                      location.reload()
+                    },
+                  })
                 }}
               >
-                {t === 'system' ? 'System' : t === 'light' ? 'Hell' : 'Dunkel'}
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="row">
+          <span>{t('Aussehen')}</span>
+          <div className="segmented" role="group" aria-label="Aussehen">
+            {(['system', 'light', 'dark'] as Theme[]).map((mode) => (
+              <button
+                key={mode}
+                aria-pressed={theme === mode}
+                onClick={() => {
+                  setTheme(mode)
+                  applyTheme(mode)
+                }}
+              >
+                {t(mode === 'system' ? 'System' : mode === 'light' ? 'Hell' : 'Dunkel')}
               </button>
             ))}
           </div>
         </div>
         <p className="small">
-          Dein Fortschritt liegt nur auf diesem Gerät. Eine Sicherung schützt ihn, falls der Browser Daten löscht.
+          {t('Dein Fortschritt liegt nur auf diesem Gerät. Eine Sicherung schützt ihn, falls der Browser Daten löscht.')}
         </p>
         <div className="row buttons">
-          <button onClick={download}>Sicherung speichern</button>
-          <button onClick={() => fileRef.current?.click()}>Sicherung laden</button>
+          <button onClick={download}>{t('Sicherung speichern')}</button>
+          <button onClick={() => fileRef.current?.click()}>{t('Sicherung laden')}</button>
           <input
             ref={fileRef}
             type="file"
@@ -421,28 +450,26 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
             className="danger-link"
             onClick={() =>
               setAsk({
-                title: 'Allen Fortschritt löschen?',
-                body: 'Alle Karten gelten danach wieder als ungelernt, auf diesem Gerät. Die Karten selbst bleiben erhalten. Speichere vorher eine Sicherung, wenn du unsicher bist.',
-                confirmLabel: 'Alles löschen',
+                title: t('Allen Fortschritt löschen?'),
+                body: t('Alle Karten gelten danach wieder als ungelernt, auf diesem Gerät. Die Karten selbst bleiben erhalten. Speichere vorher eine Sicherung, wenn du unsicher bist.'),
+                confirmLabel: t('Alles löschen'),
                 destructive: true,
                 onConfirm: async () => {
                   await resetProgress()
                   setAsk(null)
-                  setMsg('Der Fortschritt wurde gelöscht.')
+                  setMsg(t('Der Fortschritt wurde gelöscht.'))
                   refresh()
                 },
               })
             }
-          >
-            Fortschritt zurücksetzen
-          </button>
+          >{t('Fortschritt zurücksetzen')}</button>
         </div>
       </details>
 
       {undo && (
         <div className="undo" role="status">
           <span>{undo.text}</span>
-          <button onClick={undo.run}>Rückgängig</button>
+          <button onClick={undo.run}>{t('Rückgängig')}</button>
         </div>
       )}
 
@@ -592,17 +619,15 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   return (
     <main className="review">
       <div className="progress">
-        <button className="link" onClick={() => (result.current.reviewed ? setConfirmEnd(true) : onFinish(result.current))}>
-          Runde beenden
-        </button>
+        <button className="link" onClick={() => (result.current.reviewed ? setConfirmEnd(true) : onFinish(result.current))}>{t('Runde beenden')}</button>
         <span>
-          noch {queue.length} {queue.length === 1 ? 'Karte' : 'Karten'}
+          {t(queue.length === 1 ? 'noch {n} Karte' : 'noch {n} Karten', { n: queue.length })}
         </span>
       </div>
 
       <article className="card">
         <span className="tag">
-          {topicTitle(card)} · {FORMAT_LABEL[card.format]}
+          {topicTitle(card)} · {t(FORMAT_LABEL[card.format])}
         </span>
         {card.format === 'conjugate' ? (
           <>
@@ -630,7 +655,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
                 {card.fr}
               </p>
             )}
-            {card.format === 'fix' && <p className="task">Finde den Fehler und schreib den Satz richtig.</p>}
+            {card.format === 'fix' && <p className="task">{t('Finde den Fehler und schreib den Satz richtig.')}</p>}
             {card.task && <p className="task">{card.task}</p>}
           </>
         )}
@@ -639,7 +664,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
 
       {choose ? (
         <>
-          {!verdict && <p className="small center">Tippe die richtige Form an.</p>}
+          {!verdict && <p className="small center">{t('Tippe die richtige Form an.')}</p>}
           <div className="options">
           {card.options!.map((o) => {
             const state = !verdict ? '' : o === card.answer ? 'is-ok' : o === picked ? 'is-bad' : 'is-dim'
@@ -666,7 +691,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
               }}
               onKeyDown={onKey}
               readOnly={!!verdict}
-              placeholder={PLACEHOLDER[card.format] ?? 'Antwort'}
+              placeholder={t(PLACEHOLDER[card.format] ?? 'Antwort')}
               lang="fr"
               autoCapitalize="off"
               autoCorrect="off"
@@ -682,7 +707,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKey}
               readOnly={!!verdict}
-              placeholder={PLACEHOLDER[card.format] ?? 'Antwort'}
+              placeholder={t(PLACEHOLDER[card.format] ?? 'Antwort')}
               lang="fr"
               autoCapitalize="off"
               autoCorrect="off"
@@ -702,7 +727,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
           )}
           {!verdict && (
             <button className={`big ${blank && !selfGraded ? 'quiet' : 'primary'}`} onClick={submit}>
-              {selfGraded ? 'Aufdecken' : blank ? 'Weiß ich nicht' : 'Prüfen'}
+              {t(selfGraded ? 'Aufdecken' : blank ? 'Weiß ich nicht' : 'Prüfen')}
             </button>
           )}
         </>
@@ -712,11 +737,11 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
         <section className="reveal" aria-live="polite">
           {!selfGraded && (
             <p className={`verdict ${ok ? 'ok' : 'bad'}`}>
-              {VERDICT_TEXT[verdict]}
+              {t(VERDICT_TEXT[verdict])}
               {verdict === 'correct' && <Burst />}
             </p>
           )}
-          {selfGraded && verdict !== 'wrong' && <p className="verdict ok">{VERDICT_TEXT[verdict]}</p>}
+          {selfGraded && verdict !== 'wrong' && <p className="verdict ok">{t(VERDICT_TEXT[verdict])}</p>}
           <div className="answer-block">
             {hook && (
               <span className="hook" aria-hidden>
@@ -727,49 +752,42 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
               {card.format === 'translate' ? <Gendered answer={card.answer} /> : spoken}
             </p>
             {canSpeak() && (
-              <button className="icon speak" onClick={() => speak(spoken)} aria-label="Aussprache anhören">
+              <button className="icon speak" onClick={() => speak(spoken)} aria-label={t('Aussprache anhören')}>
                 <SpeakerIcon />
               </button>
             )}
           </div>
-          {verdict === 'accent' && <p className="small">Akzente zählen als Fehler, sie verändern die Aussprache.</p>}
-          {verdict === 'typo' && <p className="small">Ein Buchstabe daneben. Zählt als gewusst, kommt aber früher wieder.</p>}
+          {verdict === 'accent' && <p className="small">{t('Akzente zählen als Fehler, sie verändern die Aussprache.')}</p>}
+          {verdict === 'typo' && <p className="small">{t('Ein Buchstabe daneben. Zählt als gewusst, kommt aber früher wieder.')}</p>}
           {card.note && <p className="note">{card.note}</p>}
 
           {selfGraded ? (
             <>
-              <p className="small">Vergleiche mit deiner Antwort. Wie gut wusstest du es?</p>
+              <p className="small">{t('Vergleiche mit deiner Antwort. Wie gut wusstest du es?')}</p>
               <div className="grades">
-                <button onClick={() => next(Rating.Again)}>
-                  Falsch<small>{again ? again[Rating.Again] : ' '}</small>
+                <button onClick={() => next(Rating.Again)}>{t('Falsch')}<small>{again ? again[Rating.Again] : ' '}</small>
                 </button>
-                <button onClick={() => next(Rating.Hard)}>
-                  Fast<small>{again ? again[Rating.Hard] : ' '}</small>
+                <button onClick={() => next(Rating.Hard)}>{t('Fast')}<small>{again ? again[Rating.Hard] : ' '}</small>
                 </button>
-                <button className="primary" onClick={() => next(Rating.Good)}>
-                  Richtig<small>{again ? again[Rating.Good] : ' '}</small>
+                <button className="primary" onClick={() => next(Rating.Good)}>{t('Richtig')}<small>{again ? again[Rating.Good] : ' '}</small>
                 </button>
-                <button onClick={() => next(Rating.Easy)}>
-                  Sehr leicht<small>{again ? again[Rating.Easy] : ' '}</small>
+                <button onClick={() => next(Rating.Easy)}>{t('Sehr leicht')}<small>{again ? again[Rating.Easy] : ' '}</small>
                 </button>
               </div>
             </>
           ) : (
             <div className="grades">
               {ok ? (
-                <button onClick={() => next(Rating.Easy)}>
-                  Wusste ich sofort<small>{again ? again[Rating.Easy] : ' '}</small>
+                <button onClick={() => next(Rating.Easy)}>{t('Wusste ich sofort')}<small>{again ? again[Rating.Easy] : ' '}</small>
                 </button>
               ) : (
                 !choose &&
                 !blank && (
-                  <button onClick={() => next(Rating.Good)}>
-                    Zählt als richtig<small>{again ? again[Rating.Good] : ' '}</small>
+                  <button onClick={() => next(Rating.Good)}>{t('Zählt als richtig')}<small>{again ? again[Rating.Good] : ' '}</small>
                   </button>
                 )
               )}
-              <button className="primary" autoFocus={choose} onClick={() => next(AUTO_GRADE[verdict])}>
-                Weiter<small>{again ? again[AUTO_GRADE[verdict]] : ' '}</small>
+              <button className="primary" autoFocus={choose} onClick={() => next(AUTO_GRADE[verdict])}>{t('Weiter')}<small>{again ? again[AUTO_GRADE[verdict]] : ' '}</small>
               </button>
             </div>
           )}
@@ -778,10 +796,12 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
 
       {confirmEnd && (
         <Confirm
-          title="Runde beenden?"
-          body={`Noch ${queue.length} Karten offen. Beantwortete Karten sind gespeichert, der Rest kommt beim nächsten Start wieder.`}
-          confirmLabel="Beenden"
-          cancelLabel="Weitermachen"
+          title={t('Runde beenden?')}
+          body={t('Noch {n} Karten offen. Beantwortete Karten sind gespeichert, der Rest kommt beim nächsten Start wieder.', {
+            n: queue.length,
+          })}
+          confirmLabel={t('Beenden')}
+          cancelLabel={t('Weitermachen')}
           onConfirm={() => onFinish(result.current)}
           onCancel={() => setConfirmEnd(false)}
         />
@@ -845,50 +865,49 @@ function Placement({ onDone }: { onDone: () => void }) {
   if (!bands.length) {
     return (
       <main>
-        <h1>Einstufung</h1>
-        <p>Für die Einstufung fehlen Wortkarten.</p>
-        <button className="primary big" onClick={onDone}>
-          Zurück
-        </button>
+        <h1>{t('Einstufung')}</h1>
+        <p>{t('Für die Einstufung fehlen Wortkarten.')}</p>
+        <button className="primary big" onClick={onDone}>{t('Zurück')}</button>
       </main>
     )
   }
 
   if (finished) {
     const skipped = CARDS.filter((c) => c.rank !== undefined && c.rank <= knownRank).length
-    const words = (n: number) => `${n} ${n === 1 ? 'Wort' : 'Wörter'}`
+    const words = (n: number) => t(n === 1 ? '{n} Wort' : '{n} Wörter', { n })
     return (
       <main className="done">
-        <h1>Ergebnis der Einstufung</h1>
+        <h1>{t('Ergebnis der Einstufung')}</h1>
         {/* Below a handful of words there is nothing worth skipping. */}
         {skipped >= 5 ? (
           <>
-            <p className="score">{words(skipped)} kannst du überspringen.</p>
+            <p className="score">{t('{words} kannst du überspringen.', { words: words(skipped) })}</p>
             <p>
-              Das sind die häufigsten Wörter der Liste. Sie kommen dann nicht mehr in der Tagesrunde vor, alles
-              Seltenere schon.
+              {t(
+                'Das sind die häufigsten Wörter der Liste. Sie kommen dann nicht mehr in der Tagesrunde vor, alles Seltenere schon.',
+              )}
             </p>
             <p className="small">
-              Du kannst das in den Einstellungen jederzeit zurückholen. Grammatikthemen überspringst du einzeln in der
-              Themenliste.
+              {t(
+                'Du kannst das in den Einstellungen jederzeit zurückholen. Grammatikthemen überspringst du einzeln in der Themenliste.',
+              )}
             </p>
             <div className="grades">
-              <button onClick={() => apply(0)}>Nichts überspringen</button>
+              <button onClick={() => apply(0)}>{t('Nichts überspringen')}</button>
               <button className="primary" onClick={() => apply(knownRank)}>
-                {words(skipped)} überspringen
+                {t('{words} überspringen', { words: words(skipped) })}
               </button>
             </div>
           </>
         ) : (
           <>
-            <p className="score">Es wird nichts übersprungen.</p>
+            <p className="score">{t('Es wird nichts übersprungen.')}</p>
             <p>
-              Du fängst bei den häufigsten Wörtern an. Das ist bei diesem Ergebnis der sinnvollste Start, und der
-              Abstand zwischen den Wiederholungen wächst ohnehin schnell, wenn du eine Karte sicher kannst.
+              {t(
+                'Du fängst bei den häufigsten Wörtern an. Das ist bei diesem Ergebnis der sinnvollste Start, und der Abstand zwischen den Wiederholungen wächst ohnehin schnell, wenn du eine Karte sicher kannst.',
+              )}
             </p>
-            <button className="primary big" onClick={() => apply(0)}>
-              Alles klar
-            </button>
+            <button className="primary big" onClick={() => apply(0)}>{t('Alles klar')}</button>
           </>
         )}
       </main>
@@ -902,12 +921,17 @@ function Placement({ onDone }: { onDone: () => void }) {
           Abbrechen
         </button>
         <span>
-          Stufe {band + 1} von {bands.length} · Wort {index + 1} von {current.cards.length}
+          {t('Stufe {band} von {bands} · Wort {i} von {n}', {
+            band: band + 1,
+            bands: bands.length,
+            i: index + 1,
+            n: current.cards.length,
+          })}
         </span>
       </div>
 
       <article className="card">
-        <span className="tag">Einstufung · Übersetzen</span>
+        <span className="tag">{t('Einstufung · Übersetzen')}</span>
         <div className="bubble">
           <p className="prompt">{card.de}</p>
         </div>
@@ -932,26 +956,25 @@ function Placement({ onDone }: { onDone: () => void }) {
       />
 
       <div className="grades">
-        <button onClick={() => answer(false)}>Kenne ich nicht</button>
+        <button onClick={() => answer(false)}>{t('Kenne ich nicht')}</button>
         <button
           className="primary"
           disabled={!input.trim()}
           onClick={() => answer(check(input, acceptedAnswers(card)) !== 'wrong')}
-        >
-          Antwort prüfen
-        </button>
+        >{t('Antwort prüfen')}</button>
       </div>
       <p className="small">
-        Sechs Wörter pro Stufe, von häufig zu selten. Fünf richtige und die ganze Stufe gilt als bekannt, sonst endet
-        die Einstufung hier. Erst am Ende entscheidest du, ob etwas übersprungen wird.
+        {t(
+          'Sechs Wörter pro Stufe, von häufig zu selten. Fünf richtige und die ganze Stufe gilt als bekannt, sonst endet die Einstufung hier. Erst am Ende entscheidest du, ob etwas übersprungen wird.',
+        )}
       </p>
 
       {leaving && (
         <Confirm
-          title="Einstufung abbrechen?"
-          body="Es wird nichts übersprungen und nichts gespeichert. Du kannst die Einstufung jederzeit in den Einstellungen neu starten."
-          confirmLabel="Abbrechen"
-          cancelLabel="Weitermachen"
+          title={t('Einstufung abbrechen?')}
+          body={t('Es wird nichts übersprungen und nichts gespeichert. Du kannst die Einstufung jederzeit in den Einstellungen neu starten.')}
+          confirmLabel={t('Abbrechen')}
+          cancelLabel={t('Weitermachen')}
           onConfirm={onDone}
           onCancel={() => setLeaving(false)}
         />
@@ -969,20 +992,20 @@ function Done({ result, onHome }: { result: SessionResult; onHome: () => void })
 
   return (
     <main className="done">
-      <h1 className="center">Runde fertig</h1>
+      <h1 className="center">{t('Runde fertig')}</h1>
       <Seal score={`${result.right}/${result.reviewed}`} perfect={perfect} />
-      {perfect && <p className="parfait center">Parfait</p>}
+      {perfect && <p className="parfait center">{t('Parfait')}</p>}
       <p className="score">
-        {perfect ? 'Alles richtig.' : `${result.right} von ${result.reviewed} richtig`}
+        {perfect ? t('Alles richtig.') : t('{right} von {total} richtig', { right: result.right, total: result.reviewed })}
       </p>
       {tomorrow !== null && (
         <p className="small center">
-          {tomorrow ? `Morgen warten ${tomorrow} Karten auf dich.` : 'Morgen kommen wieder neue Karten dazu.'}
+          {tomorrow ? t('Morgen warten {n} Karten auf dich.', { n: tomorrow }) : t('Morgen kommen wieder neue Karten dazu.')}
         </p>
       )}
       {result.missed.length > 0 && (
         <section>
-          <h2>Diese Karten kommen morgen wieder</h2>
+          <h2>{t('Diese Karten kommen morgen wieder')}</h2>
           <ul className="missed">
             {result.missed.map((c) => (
               <li key={c.id}>
@@ -993,9 +1016,7 @@ function Done({ result, onHome }: { result: SessionResult; onHome: () => void })
           </ul>
         </section>
       )}
-      <button className="primary big" onClick={onHome}>
-        Zur Übersicht
-      </button>
+      <button className="primary big" onClick={onHome}>{t('Zur Übersicht')}</button>
     </main>
   )
 }

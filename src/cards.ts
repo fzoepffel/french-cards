@@ -1,6 +1,5 @@
-import raw from './data/cards.json'
 import emoji from './data/emoji.json'
-import { TOPIC_BY_ID } from './data/topics'
+import type { Section } from './data/topics'
 
 export type Format = 'translate' | 'gap' | 'conjugate' | 'rewrite' | 'choose' | 'fix' | 'sentence'
 
@@ -23,9 +22,20 @@ export interface StudyCard {
   rank?: number
 }
 
-export const CARDS = raw as StudyCard[]
+export let CARDS: StudyCard[] = []
+export let SECTIONS: Section[] = []
+export let CARD_BY_ID = new Map<string, StudyCard>()
+let TOPIC_BY_ID = new Map<string, { id: string; title: string }>()
+export let TOPIC_ORDER: string[] = []
 
-export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]))
+/** Installs the deck that was fetched for the chosen language pair. */
+export function setDeck(cards: StudyCard[], sections: Section[]) {
+  CARDS = cards
+  SECTIONS = sections
+  CARD_BY_ID = new Map(cards.map((c) => [c.id, c]))
+  TOPIC_BY_ID = new Map(sections.flatMap((s) => s.topics.map((t) => [t.id, t] as const)))
+  TOPIC_ORDER = sections.flatMap((s) => s.topics.map((t) => t.id))
+}
 
 export const FORMAT_LABEL: Record<Format, string> = {
   translate: 'Übersetzen',

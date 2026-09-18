@@ -1,7 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import { createEmptyCard, fsrs, generatorParameters, Rating, type Card, type Grade } from 'ts-fsrs'
-import { CARDS, CARD_BY_ID, bucketOf, type Bucket, type StudyCard } from './cards'
-import { SECTIONS, TOPIC_ORDER } from './data/topics'
+import { CARDS, CARD_BY_ID, SECTIONS, TOPIC_ORDER, bucketOf, type Bucket, type StudyCard } from './cards'
+
 
 export interface Progress {
   id: string
