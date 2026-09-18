@@ -758,7 +758,9 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
    * It waits for the keyboard animation, and the browser does the arithmetic.
    */
   const showBar = () => {
-    setTimeout(() => dockRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }), 350)
+    // "nearest" leaves the page alone when the bar is already in view, which it is
+    // whenever the card and the bar fit above the keyboard together.
+    setTimeout(() => dockRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 350)
   }
   // Typed cards keep the keyboard open for the whole round: every button below
   // refuses focus, so the field never loses it and iOS never folds the keyboard away.

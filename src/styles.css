@@ -929,10 +929,19 @@ button.danger-link {
 }
 
 /*
- * With the keyboard up, Safari leaves about 400 points for the whole screen, so the
- * card and the bar both give ground: one row of accents that scrolls sideways, a
- * shorter button, and a card with less padding around it.
+ * With the keyboard up there is very little room, so the card and the bar both give
+ * ground: one row of accents that scrolls sideways, a shorter button, and a card
+ * with less padding. The screen also stops filling the window and shrinks to its
+ * content, which brings the bar up against the card instead of a screen below it.
  */
+.review.typing {
+  min-height: 0;
+}
+
+.review.typing .dock {
+  margin-top: 0;
+}
+
 .review.typing .dock {
   padding-bottom: 12px;
   padding-top: 10px;
