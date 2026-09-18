@@ -15,7 +15,8 @@
     "cards:show": "node pipeline/show.ts",
     "cards:import": "node pipeline/import.ts",
     "typecheck": "tsc -b && tsc -p tsconfig.node.json",
-    "cards:recheck": "node pipeline/recheck.ts"
+    "cards:recheck": "node pipeline/recheck.ts",
+    "test": "node scripts/check.test.ts"
   },
   "dependencies": {
     "dexie": "^4.4.6",
