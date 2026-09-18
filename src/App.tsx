@@ -909,7 +909,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
                   {card.fr}
                 </p>
               )}
-              {card.format === 'fix' && <p className="task">{t('Finde den Fehler und schreib den Satz richtig.')}</p>}
+              {card.format === 'fix' && <p className="task instruction">{t('Finde den Fehler und schreib den Satz richtig.')}</p>}
               {card.task && <p className="task">{card.task}</p>}
             </>
           )}

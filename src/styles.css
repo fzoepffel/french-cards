@@ -919,6 +919,10 @@ button.danger-link {
  * scrolled along with it, so no measurement of the keyboard is needed anywhere.
  */
 .dock {
+  /* Safari floats its address pill over the foot of the page, so a scroll that brings
+     the bar into view leaves room for it. This is spacing for scrolling only: it costs
+     the layout nothing when everything already fits. */
+  scroll-margin-bottom: 64px;
   margin: auto -18px 0;
   padding: 12px 18px calc(env(safe-area-inset-bottom) + 14px);
   display: flex;
@@ -936,6 +940,26 @@ button.danger-link {
  */
 .review.typing {
   min-height: 0;
+  padding-bottom: 12px;
+}
+
+/* the card's own label already says what to do, so the sentence saying it can go */
+.review.typing .instruction {
+  display: none;
+}
+
+/*
+ * A long question would push the answer bar off the screen while typing. Instead the
+ * question keeps a fixed share of the screen and scrolls within itself, so question
+ * and bar are always on screen together. The negative margins give the card's shadow
+ * room to sit outside the scrolling box.
+ */
+.review.typing .scroller {
+  max-height: 30vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 0 14px 14px;
+  margin: 0 -14px -14px;
 }
 
 .review.typing .dock {
@@ -1002,7 +1026,7 @@ button.danger-link {
 }
 
 .review.typing .prompt {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
 .review.typing .bubble {
@@ -1016,6 +1040,13 @@ button.danger-link {
 
 
 .progress {
+  /* stays put while a tall card scrolls, so ending a round is always one tap away */
+  position: sticky;
+  top: calc(env(safe-area-inset-top) * -1);
+  z-index: 2;
+  padding: 6px 0;
+  margin-top: -6px;
+  background: var(--paper);
   display: flex;
   justify-content: space-between;
   align-items: center;
