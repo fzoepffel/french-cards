@@ -279,14 +279,22 @@ function Home({
       ) : firstRun ? (
         <section className="firstrun">
           <h2>{t('Wie möchtest du anfangen?')}</h2>
-          <button className="big primary" data-starts-round onPointerDown={openKeyboard} onClick={onPlacement}>
+          <button
+            className="big primary"
+            data-starts-round
+            onClick={() => {
+              openKeyboard()
+              onPlacement()
+            }}
+          >
             {t('Einstufung machen')}
             <small>{t('Ein kurzer Test überspringt, was du schon kannst')}</small>
           </button>
           <button
             className="big"
-            data-starts-round onPointerDown={openKeyboard}
+            data-starts-round
             onClick={() => {
+              openKeyboard()
               markPlaced()
               setSkipState(getSkip())
               start()
@@ -299,8 +307,9 @@ function Home({
       ) : (
         <button
           className="primary big"
-          data-starts-round onPointerDown={openKeyboard}
+          data-starts-round
           onClick={async () => {
+            openKeyboard()
             const queue = total ? await buildQueue() : await buildExtraQueue(10)
             if (queue.length) onStart(queue)
             else (document.activeElement as HTMLElement | null)?.blur()
@@ -371,10 +380,11 @@ function Home({
                   className="play"
                   disabled={!playable}
                   aria-label={t('{title} üben', { title: section.title })}
-                  data-starts-round onPointerDown={openKeyboard}
+                  data-starts-round
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
+                    openKeyboard()
                     start(section.topics.map((topic) => topic.id))
                   }}
                 >
@@ -397,8 +407,11 @@ function Home({
                         <button
                           className="topic-main"
                           disabled={empty || complete || skipped}
-                          data-starts-round onPointerDown={openKeyboard}
-                          onClick={() => start([r.id])}
+                          data-starts-round
+                          onClick={() => {
+                            openKeyboard()
+                            start([r.id])
+                          }}
                           aria-label={t('{title} üben', { title: r.title })}
                         >
                           <span className="topic-head">
