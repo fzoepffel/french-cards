@@ -88,6 +88,8 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
   const [ask, setAsk] = useState<Omit<ConfirmProps, 'onCancel'> | null>(null)
   const [undo, setUndo] = useState<{ text: string; run: () => void } | null>(null)
   const [days, setDays] = useState(0)
+  // which topic has its mastery breakdown open, at most one at a time
+  const [openTopic, setOpenTopic] = useState<string | null>(null)
   const [theme, setTheme] = useState<Theme>(getTheme)
   const [autoSpeak, setAuto] = useState(getAutoSpeak)
   const [pair] = useState(getPair)
@@ -99,8 +101,8 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
   }, [])
   useEffect(refresh, [refresh])
 
-  const start = async (topic?: string) => {
-    const queue = await buildQueue(topic)
+  const start = async (topics?: string[]) => {
+    const queue = await buildQueue(topics)
     if (queue.length) onStart(queue)
   }
 
@@ -264,19 +266,38 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
         </h2>
         <p className="small">
           {t(
-            'Tippe ein Thema an, um nur daraus zu üben. Das Häkchen daneben heißt "kann ich schon" und nimmt das Thema aus der Tagesrunde.',
+            'Tippe ein Thema an, um nur daraus zu üben, oder "üben" oben im Bereich für alle Themen darin. Der Balken zeigt, wie fest die Karten sitzen: tippe ihn an für die Zahlen. Das Häkchen heißt "kann ich schon" und nimmt ein Thema aus der Tagesrunde.',
           )}
         </p>
         {SECTIONS.map((section, i) => {
           const rows = section.topics.map((t) => ({ ...t, p: s?.topics.get(t.id) }))
-          const seen = rows.reduce((n, r) => n + (r.p?.seen ?? 0), 0)
           const all = rows.reduce((n, r) => n + (r.p?.total ?? 0), 0)
+          const sectionDue = rows.reduce((n, r) => n + (r.p?.due ?? 0), 0)
+          const sectionLevels = [0, 1, 2, 3].map((i) => rows.reduce((n, r) => n + (r.p?.levels[i] ?? 0), 0))
+          const seen = sectionLevels.reduce((a, b) => a + b, 0)
+          // Playable as long as the section still has something due or something new.
+          const playable = sectionDue > 0 || seen < all
           return (
             <details key={section.id} className="section" style={{ ['--accent-c' as string]: SECTION_COLOURS[i % SECTION_COLOURS.length] }}>
               <summary>
                 <span>{section.title}</span>
                 <span className="count">
-                  {seen}/{all}
+                  {sectionDue ? t('{n} fällig', { n: sectionDue }) : t('{n} Karten', { n: all })}
+                </span>
+                <button
+                  className="play"
+                  disabled={!playable}
+                  aria-label={t('{title} üben', { title: section.title })}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    start(section.topics.map((topic) => topic.id))
+                  }}
+                >
+                  {t('üben')}
+                </button>
+                <span className="section-bar">
+                  <Levels levels={sectionLevels} total={all} />
                 </span>
               </summary>
               <ul>
@@ -285,36 +306,48 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
                   const empty = !p || p.total === 0
                   const complete = !empty && p.due === 0 && p.seen === p.total
                   const skipped = skip.topics.includes(r.id)
+                  const open = openTopic === r.id
                   return (
                     <li key={r.id}>
-                      <button
-                        className="topic-main"
-                        disabled={empty || complete || skipped}
-                        onClick={() => start(r.id)}
-                        aria-label={t('{title} üben', { title: r.title })}
-                      >
-                        <span className="topic-head">
-                          <span>{r.title}</span>
-                          <span className="count">
-                            {skipped
-                              ? t('übersprungen')
-                              : complete
-                                ? t('alles dran')
-                                : `${p?.seen ?? 0}/${p?.total ?? 0}${p?.due ? ` · ${t('{n} fällig', { n: p.due })}` : ''}`}
+                      <div className="topic-row">
+                        <button
+                          className="topic-main"
+                          disabled={empty || complete || skipped}
+                          onClick={() => start([r.id])}
+                          aria-label={t('{title} üben', { title: r.title })}
+                        >
+                          <span className="topic-head">
+                            <span>{r.title}</span>
+                            <span className="count">
+                              {skipped
+                                ? t('übersprungen')
+                                : p?.due
+                                  ? t('{n} fällig', { n: p.due })
+                                  : complete
+                                    ? t('alles dran')
+                                    : t('{n} Karten', { n: p?.total ?? 0 })}
+                            </span>
                           </span>
-                        </span>
-                        <span className={`bar ${complete ? 'done' : ''}`} aria-hidden>
-                          <span style={{ width: `${p?.total ? (100 * p.seen) / p.total : 0}%` }} />
-                        </span>
-                      </button>
+                        </button>
+                        <button
+                          className="icon"
+                          aria-pressed={skipped}
+                          aria-label={skipped ? t('{title} wieder aufnehmen', { title: r.title }) : t('{title} kann ich schon', { title: r.title })}
+                          onClick={() => skipTopic(r.id, r.title)}
+                        >
+                          <Check />
+                        </button>
+                      </div>
                       <button
-                        className="icon"
-                        aria-pressed={skipped}
-                        aria-label={skipped ? t('{title} wieder aufnehmen', { title: r.title }) : t('{title} kann ich schon', { title: r.title })}
-                        onClick={() => skipTopic(r.id, r.title)}
+                        className={`bar-toggle ${open ? 'open' : ''}`}
+                        aria-expanded={open}
+                        aria-label={t('Lernstand von {title}', { title: r.title })}
+                        onClick={() => setOpenTopic(open ? null : r.id)}
                       >
-                        <Check />
+                        <Levels levels={p?.levels} total={p?.total ?? 0} />
+                        <span className="chev" aria-hidden />
                       </button>
+                      {open && <LevelTable levels={p?.levels} total={p?.total ?? 0} />}
                     </li>
                   )
                 })}
@@ -490,6 +523,52 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
 }
 
 const ACCENTS = ['é', 'è', 'ê', 'à', 'â', 'ç', 'ù', 'û', 'î', 'ï', 'ô', 'œ', 'ë']
+
+/**
+ * The four mastery levels, weakest first. The ranges are the review interval the
+ * card has reached, which is the honest answer to "how well do I know this".
+ */
+const LEVEL_LABELS = ['gerade gelernt', 'wird sicher', 'sitzt', 'fest drin']
+const LEVEL_RANGES = ['unter 1 Woche', '1 bis 4 Wochen', '1 bis 6 Monate', 'über 6 Monate']
+
+/** The progress bar, split into the levels. The rest of the track is untouched cards. */
+function Levels({ levels, total }: { levels?: number[]; total: number }) {
+  const parts = levels ?? [0, 0, 0, 0]
+  return (
+    <span className="bar" aria-hidden>
+      {parts.map((n, i) =>
+        n > 0 && total > 0 ? <span key={i} className={`lvl${i + 1}`} style={{ width: `${(100 * n) / total}%` }} /> : null,
+      )}
+    </span>
+  )
+}
+
+/** The numbers behind the bar, shown when a topic's bar is tapped. */
+function LevelTable({ levels, total }: { levels?: number[]; total: number }) {
+  const parts = levels ?? [0, 0, 0, 0]
+  const untouched = total - parts.reduce((a, b) => a + b, 0)
+  return (
+    <dl className="levels">
+      {parts.map((n, i) => (
+        <div key={i}>
+          <dt>
+            <span className={`swatch lvl${i + 1}`} />
+            {t(LEVEL_LABELS[i])}
+            <span className="range">{t(LEVEL_RANGES[i])}</span>
+          </dt>
+          <dd>{n}</dd>
+        </div>
+      ))}
+      <div className="untouched">
+        <dt>
+          <span className="swatch" />
+          {t('noch nicht dran')}
+        </dt>
+        <dd>{untouched}</dd>
+      </div>
+    </dl>
+  )
+}
 
 /** One colour per curriculum section, so the list is scannable and a bit livelier. */
 const SECTION_COLOURS = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)']

@@ -51,8 +51,18 @@ export function setPair(pair: Pair) {
   }
 }
 
+declare const __DECK_VERSION__: string
+
 export async function loadDeck(pair: Pair): Promise<Deck> {
   const url = `${import.meta.env.BASE_URL}decks/${pair}.json`
+  // The version makes a changed deck a cache miss, so edits reach a device that
+  // already holds an older copy. Offline, that copy is still the best answer.
+  try {
+    const fresh = await fetch(`${url}?v=${__DECK_VERSION__}`)
+    if (fresh.ok) return (await fresh.json()) as Deck
+  } catch {
+    /* offline with a new app shell, fall back to whatever is cached */
+  }
   const response = await fetch(url)
   if (!response.ok) throw new Error(`Deck ${pair} not found (${response.status})`)
   return (await response.json()) as Deck

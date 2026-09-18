@@ -114,6 +114,20 @@ export interface TopicProgress {
   seen: number
   total: number
   due: number
+  /** How many of the seen cards sit at each mastery level, level 1 first */
+  levels: number[]
+}
+
+/**
+ * Mastery, read from the interval FSRS has settled on. Stability is the number of
+ * days until the card would be half forgotten, so it says how well a card is known
+ * far better than a count of correct answers: one lapse pulls it back down.
+ */
+export const LEVEL_DAYS = [7, 30, 180]
+
+export function levelOf(p: Progress): number {
+  const days = p.fsrs.stability ?? 0
+  return LEVEL_DAYS.filter((d) => days >= d).length + 1
 }
 
 export interface Stats {
@@ -142,7 +156,9 @@ export async function stats(): Promise<Stats> {
   for (const c of CARDS) if (!seen.has(c.id) && !isSkipped(c, skip)) unseen[bucketOf(c)]++
   const left = (b: Bucket) => Math.max(0, Math.min(unseen[b], limits[b] - introducedToday[b]))
 
-  const topics = new Map<string, TopicProgress>(TOPIC_ORDER.map((id) => [id, { seen: 0, total: 0, due: 0 }]))
+  const topics = new Map<string, TopicProgress>(
+    TOPIC_ORDER.map((id) => [id, { seen: 0, total: 0, due: 0, levels: [0, 0, 0, 0] }]),
+  )
   const byId = new Map(all.map((p) => [p.id, p]))
   for (const c of CARDS) {
     const tp = topics.get(c.topic)
@@ -151,6 +167,7 @@ export async function stats(): Promise<Stats> {
     const p = byId.get(c.id)
     if (p) {
       tp.seen++
+      tp.levels[levelOf(p) - 1]++
       if (isDue(p, now)) tp.due++
     }
   }
@@ -191,14 +208,15 @@ function spread(cards: StudyCard[]): StudyCard[] {
 
 /**
  * Daily queue: due reviews first (oldest first), then today's new words and new
- * grammar mixed. With a topic, only that topic, and up to 10 new cards regardless
- * of the daily limits.
+ * grammar mixed. Given a scope (one topic, or every topic of a section), only those
+ * cards, and up to 10 new ones regardless of the daily limits.
  */
-export async function buildQueue(topic?: string): Promise<StudyCard[]> {
+export async function buildQueue(topics?: string[]): Promise<StudyCard[]> {
   const all = (await db.progress.toArray()).filter((p) => CARD_BY_ID.has(p.id))
   const seen = new Set(all.map((p) => p.id))
   const now = Date.now()
-  const inScope = (c: StudyCard) => !topic || c.topic === topic
+  const scope = topics?.length ? new Set(topics) : null
+  const inScope = (c: StudyCard) => !scope || scope.has(c.topic)
 
   const due = all
     .filter((p) => isDue(p, now))
@@ -208,7 +226,8 @@ export async function buildQueue(topic?: string): Promise<StudyCard[]> {
 
   const skip = getSkip()
   const unseen = CARDS.filter((c) => !seen.has(c.id) && inScope(c) && !isSkipped(c, skip))
-  if (topic) return [...due, ...unseen.slice(0, 10)]
+  // Within a section, spread() keeps the new cards from all coming out of its first topic.
+  if (scope) return [...due, ...spread(unseen).slice(0, 10)]
 
   const { newLeft } = await stats()
   const words = spread(unseen.filter((c) => bucketOf(c) === 'wort')).slice(0, newLeft.wort)

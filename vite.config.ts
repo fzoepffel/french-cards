@@ -1,9 +1,19 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { createHash } from 'node:crypto'
+import { readdirSync, readFileSync } from 'node:fs'
+
+// The decks are cached on the device, so their URL carries a content hash: a new
+// deck is a new URL and reaches the phone, an unchanged one is never downloaded twice.
+const deckVersion = createHash('sha1')
+  .update(readdirSync('public/decks').sort().map((f) => readFileSync(`public/decks/${f}`)).join(''))
+  .digest('hex')
+  .slice(0, 8)
 
 export default defineConfig({
   base: './',
+  define: { __DECK_VERSION__: JSON.stringify(deckVersion) },
   plugins: [
     react(),
     VitePWA({

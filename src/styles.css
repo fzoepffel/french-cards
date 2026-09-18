@@ -40,6 +40,12 @@
   --c5: #f5a623;
   --c6: #2b8fa8;
 
+  /* Mastery levels, weakest first */
+  --lvl1: #e8552f;
+  --lvl2: #f5a623;
+  --lvl3: #5ab761;
+  --lvl4: #14706a;
+
   /* Form */
   --radius: 18px;
   --radius-sm: 13px;
@@ -88,6 +94,10 @@
   --on-primary: #21120c;
   --ok-bg: #1f3a2a;
   --bad-bg: #3d1f2c;
+  --lvl1: #ff7a4d;
+  --lvl2: #ffc247;
+  --lvl3: #6fdc9b;
+  --lvl4: #37b3ab;
 }
 
 * {
@@ -449,10 +459,11 @@ button.danger-link {
 }
 
 .section summary {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 15px 16px;
+  padding: 15px 16px 18px;
   cursor: pointer;
   font-weight: 800;
   list-style: none;
@@ -482,6 +493,47 @@ button.danger-link {
   margin-left: auto;
 }
 
+/* practise the whole section, every topic in it */
+.play {
+  flex: none;
+  padding: 7px 13px;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--on-primary);
+  background: var(--accent-c, var(--primary));
+  border: 2px solid var(--outline);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+}
+
+.play:active:not(:disabled) {
+  transform: translate(2px, 3px);
+  box-shadow: none;
+}
+
+.play:disabled {
+  opacity: 0.4;
+  box-shadow: none;
+}
+
+/* progress along the bottom edge of the section header */
+.section-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: block;
+}
+
+.section-bar .bar {
+  height: 7px;
+  border: none;
+  border-top: 2px solid var(--outline);
+  border-radius: 0;
+}
+
 .section summary::after {
   content: '';
   width: 9px;
@@ -506,6 +558,12 @@ button.danger-link {
 
 .section li {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.topic-row {
+  display: flex;
   align-items: center;
   gap: 10px;
 }
@@ -525,7 +583,7 @@ button.danger-link {
   border: none;
   box-shadow: none;
   border-radius: var(--radius-sm);
-  padding: 12px 8px;
+  padding: 12px 8px 6px;
   font-weight: 700;
   min-width: 0;
 }
@@ -554,8 +612,40 @@ button.danger-link {
   flex: none;
 }
 
+.bar-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 8px 12px;
+}
+
+.bar-toggle:hover {
+  background: var(--paper-2);
+}
+
+.bar-toggle .chev {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-right: 3px solid var(--ink-soft);
+  border-bottom: 3px solid var(--ink-soft);
+  border-radius: 2px;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+
+.bar-toggle.open .chev {
+  transform: rotate(-135deg) translateY(-2px);
+}
+
 .bar {
-  display: block;
+  display: flex;
+  flex: 1;
   height: 12px;
   border-radius: 999px;
   background: var(--paper-2);
@@ -564,15 +654,87 @@ button.danger-link {
 }
 
 .bar span {
-  display: block;
   height: 100%;
-  background: var(--accent-c, var(--primary));
   border-right: 2px solid var(--outline);
   transition: width 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
 
-.bar.done span {
-  background: var(--green);
+.bar span:last-child {
+  border-right: none;
+}
+
+.bar .lvl1,
+.levels .swatch.lvl1 {
+  background: var(--lvl1);
+}
+
+.bar .lvl2,
+.levels .swatch.lvl2 {
+  background: var(--lvl2);
+}
+
+.bar .lvl3,
+.levels .swatch.lvl3 {
+  background: var(--lvl3);
+}
+
+.bar .lvl4,
+.levels .swatch.lvl4 {
+  background: var(--lvl4);
+}
+
+/* the numbers behind the bar */
+.levels {
+  margin: 0 8px 12px;
+  padding: 10px 12px;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.levels > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.levels dt {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: 1;
+  font-weight: 700;
+  min-width: 0;
+}
+
+.levels dd {
+  margin: 0;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.levels .range {
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+.levels .untouched {
+  border-top: 2px dashed var(--line);
+  margin-top: 4px;
+  padding-top: 7px;
+  color: var(--ink-soft);
+}
+
+.levels .swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  border: 2px solid var(--outline);
+  background: var(--paper-2);
+  flex: none;
+  align-self: center;
 }
 
 /* ---------------------------------------------------------------- settings */

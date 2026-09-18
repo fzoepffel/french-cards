@@ -34,14 +34,25 @@ const EN: Record<string, string> = {
     "Today's plan is done. An extra round takes more cards without changing tomorrow's plan.",
   Themen: 'Topics',
   '{seen} von {total} Karten schon gesehen': '{seen} of {total} cards seen so far',
-  'Tippe ein Thema an, um nur daraus zu üben. Das Häkchen daneben heißt "kann ich schon" und nimmt das Thema aus der Tagesrunde.':
-    'Tap a topic to practise only that one. The check mark beside it means "I know this" and takes the topic out of the daily round.',
+  'Tippe ein Thema an, um nur daraus zu üben, oder "üben" oben im Bereich für alle Themen darin. Der Balken zeigt, wie fest die Karten sitzen: tippe ihn an für die Zahlen. Das Häkchen heißt "kann ich schon" und nimmt ein Thema aus der Tagesrunde.':
+    'Tap a topic to practise only that one, or "practise" in a section header for every topic in it. The bar shows how firmly the cards are sitting: tap it for the numbers. The check mark means "I know this" and takes a topic out of the daily round.',
   übersprungen: 'skipped',
   'alles dran': 'all done',
   '{n} fällig': '{n} due',
   '{title} üben': 'Practise {title}',
+  üben: 'practise',
   '{title} wieder aufnehmen': 'Bring {title} back',
   '{title} kann ich schon': 'I already know {title}',
+  'Lernstand von {title}': 'How well you know {title}',
+  'gerade gelernt': 'just learned',
+  'wird sicher': 'getting there',
+  sitzt: 'solid',
+  'fest drin': 'locked in',
+  'unter 1 Woche': 'under a week',
+  '1 bis 4 Wochen': '1 to 4 weeks',
+  '1 bis 6 Monate': '1 to 6 months',
+  'über 6 Monate': 'over 6 months',
+  'noch nicht dran': 'not started yet',
 
   // settings
   Einstellungen: 'Settings',
