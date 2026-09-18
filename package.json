@@ -16,7 +16,9 @@
     "cards:import": "node pipeline/import.ts",
     "typecheck": "tsc -b && tsc -p tsconfig.node.json",
     "cards:recheck": "node pipeline/recheck.ts",
-    "test": "node scripts/check.test.ts"
+    "test": "node scripts/check.test.ts",
+    "cards:contextify": "node --env-file-if-exists=.env pipeline/contextify.ts",
+    "cards:verify": "node --env-file-if-exists=.env pipeline/verify.ts"
   },
   "dependencies": {
     "dexie": "^4.4.6",
