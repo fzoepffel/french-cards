@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { Rating, type Grade } from 'ts-fsrs'
 import {
   CARDS,
@@ -63,6 +62,7 @@ interface SessionResult {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' })
+  const view = useViewport()
   const primer = useRef<HTMLInputElement>(null)
   /**
    * iOS opens the keyboard only inside a real tap, and the first card of a round is
@@ -82,7 +82,7 @@ export default function App() {
     if (screen.name !== 'review' && screen.name !== 'placement') closeKeyboard()
   })
 
-  const view = () => {
+  const screenView = () => {
     if (screen.name === 'review') {
       return <Review queue={screen.queue} onFinish={(result) => setScreen({ name: 'done', result })} />
     }
@@ -103,10 +103,10 @@ export default function App() {
   }
 
   return (
-    <>
+    <div id="frame" className="frame" style={{ height: view.height, transform: `translateY(${view.offsetTop}px)` }}>
       <input ref={primer} className="kb-primer" tabIndex={-1} aria-hidden inputMode="text" />
-      {view()}
-    </>
+      {screenView()}
+    </div>
   )
 }
 
@@ -643,17 +643,19 @@ function Home({
 const ACCENTS = ['é', 'è', 'ê', 'à', 'â', 'ç', 'ù', 'û', 'î', 'ï', 'ô', 'œ', 'ë']
 
 /**
- * The part of the window a card screen can actually use, and how far the keyboard
- * reaches up from the bottom. Browsers differ: some shrink the layout viewport for
- * the keyboard, some leave it alone and only shrink the visual viewport. Measuring
- * both from the visual viewport covers either case, and asking for 100dvh as well
- * would count the keyboard twice where the layout does shrink.
+ * The visible part of the page, measured from the visual viewport alone.
+ *
+ * Safari on iOS shrinks only the visual viewport for the keyboard, never the layout
+ * viewport, and does not support interactive-widget, so neither innerHeight nor dvh
+ * says where the keyboard begins. The app is drawn into a frame the size of the
+ * visual viewport instead, and everything inside it is ordinary layout: the foot of
+ * the frame is the top of the keyboard, whether or not one is open.
  */
 function useViewport() {
   const read = () => {
     const vv = window.visualViewport
-    if (!vv) return { height: window.innerHeight, inset: 0 }
-    return { height: vv.height, inset: Math.max(0, window.innerHeight - vv.height - vv.offsetTop) }
+    if (!vv) return { height: window.innerHeight, offsetTop: 0 }
+    return { height: vv.height, offsetTop: vv.offsetTop }
   }
   const [box, setBox] = useState(read)
   useEffect(() => {
@@ -661,15 +663,22 @@ function useViewport() {
     const vv = window.visualViewport
     vv?.addEventListener('resize', update)
     vv?.addEventListener('scroll', update)
-    window.addEventListener('resize', update)
+    window.addEventListener('orientationchange', update)
     update()
     return () => {
       vv?.removeEventListener('resize', update)
       vv?.removeEventListener('scroll', update)
-      window.removeEventListener('resize', update)
+      window.removeEventListener('orientationchange', update)
     }
   }, [])
   return box
+}
+
+/** True once the viewport has shrunk well below the tallest it has been: a keyboard. */
+function useKeyboardOpen(height: number) {
+  const tallest = useRef(height)
+  tallest.current = Math.max(tallest.current, height)
+  return height < tallest.current - 120
 }
 
 /**
@@ -775,10 +784,9 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const selfGraded = card.format === 'sentence'
   const choose = card.format === 'choose'
   const view = useViewport()
+  const kbOpen = useKeyboardOpen(view.height)
   // ?debug=1 puts the layout numbers on screen, the only way to see them on a phone
   const debug = new URLSearchParams(location.search).has('debug')
-  const dockRef = useRef<HTMLDivElement>(null)
-  const [dockH, setDockH] = useState(0)
   // Typed cards keep the keyboard open for the whole round: every button below
   // refuses focus, so the field never loses it and iOS never folds the keyboard away.
   const keepKeyboard = (e: React.PointerEvent) => {
@@ -862,15 +870,6 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
     else if (!selfGraded) next(AUTO_GRADE[verdict])
   }
 
-  useLayoutEffect(() => {
-    const el = dockRef.current
-    if (!el) return
-    const observer = new ResizeObserver(() => setDockH(el.offsetHeight))
-    observer.observe(el)
-    setDockH(el.offsetHeight)
-    return () => observer.disconnect()
-  }, [])
-
   const ok = verdict === 'correct' || verdict === 'typo'
   const hook = hookFor(card)
   const spoken = solution(card)
@@ -881,14 +880,14 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const showSource = card.format === 'rewrite' || (card.fr && !card.fr.includes('___') && card.format !== 'fix')
 
   return (
-    <main className="review" style={{ height: Math.max(120, view.height - dockH) }}>
+    <main className="review">
       <div className="progress">
         <button className="link" onClick={() => (result.current.reviewed ? setConfirmEnd(true) : onFinish(result.current))}>
           {t('Runde beenden')}
         </button>
         <span>
           {debug
-            ? `vv${Math.round(view.height)} in${Math.round(view.inset)} ih${window.innerHeight} dock${dockH}`
+            ? `vv${Math.round(view.height)} top${Math.round(view.offsetTop)} ih${window.innerHeight}`
             : t(queue.length === 1 ? 'noch {n} Karte' : 'noch {n} Karten', { n: queue.length })}
         </span>
       </div>
@@ -986,123 +985,114 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
         )}
       </div>
 
-      {/* The answer field and its buttons stay above the keyboard. The review screen is
-          animated, which would make a fixed child sit inside it on Safari, so this goes
-          to the body instead. */}
-      {!(choose && !verdict) &&
-        createPortal(
-          <div className={`dock-layer ${view.inset > 0 ? 'lifted' : ''}`} style={{ bottom: view.inset }}>
-            <div className="dock" ref={dockRef}>
-              {!choose &&
-                (multiline ? (
-                  <textarea
-                    ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-                    className={`answer ${verdict ? (ok ? 'is-ok' : selfGraded ? '' : 'is-bad') : ''}`}
-                    value={input}
-                    rows={2}
-                    onChange={(e) => {
-                      if (verdict) return
-                      setInput(e.target.value)
-                      e.target.style.height = 'auto'
-                      e.target.style.height = `${e.target.scrollHeight}px`
-                    }}
-                    onKeyDown={onKey}
-                    placeholder={t(PLACEHOLDER[card.format] ?? 'Antwort')}
-                    lang="fr"
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    autoComplete="off"
-                    spellCheck={false}
-                    enterKeyHint={verdict ? 'next' : 'go'}
-                  />
-                ) : (
-                  <input
-                    ref={inputRef as React.RefObject<HTMLInputElement>}
-                    className={`answer ${verdict ? (ok ? 'is-ok' : selfGraded ? '' : 'is-bad') : ''}`}
-                    value={input}
-                    onChange={(e) => !verdict && setInput(e.target.value)}
-                    onKeyDown={onKey}
-                    placeholder={t(PLACEHOLDER[card.format] ?? 'Antwort')}
-                    lang="fr"
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    autoComplete="off"
-                    spellCheck={false}
-                    enterKeyHint={verdict ? 'next' : 'go'}
-                  />
-                ))}
+      {/* The answer field and its buttons sit at the foot of the frame, which ends where
+          the keyboard begins, so nothing has to be lifted out of the way. */}
+      {!(choose && !verdict) && (
+        <div className={`dock ${kbOpen ? 'compact' : ''}`}>
+          {!choose &&
+            (multiline ? (
+              <textarea
+                ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+                className={`answer ${verdict ? (ok ? 'is-ok' : selfGraded ? '' : 'is-bad') : ''}`}
+                value={input}
+                rows={2}
+                onChange={(e) => {
+                  if (verdict) return
+                  setInput(e.target.value)
+                  e.target.style.height = 'auto'
+                  e.target.style.height = `${e.target.scrollHeight}px`
+                }}
+                onKeyDown={onKey}
+                placeholder={t(PLACEHOLDER[card.format] ?? 'Antwort')}
+                lang="fr"
+                autoCapitalize="off"
+                autoCorrect="off"
+                autoComplete="off"
+                spellCheck={false}
+                enterKeyHint={verdict ? 'next' : 'go'}
+              />
+            ) : (
+              <input
+                ref={inputRef as React.RefObject<HTMLInputElement>}
+                className={`answer ${verdict ? (ok ? 'is-ok' : selfGraded ? '' : 'is-bad') : ''}`}
+                value={input}
+                onChange={(e) => !verdict && setInput(e.target.value)}
+                onKeyDown={onKey}
+                placeholder={t(PLACEHOLDER[card.format] ?? 'Antwort')}
+                lang="fr"
+                autoCapitalize="off"
+                autoCorrect="off"
+                autoComplete="off"
+                spellCheck={false}
+                enterKeyHint={verdict ? 'next' : 'go'}
+              />
+            ))}
 
-              {!choose && !verdict && (
-                <div className="accents" aria-label="Sonderzeichen">
-                  {ACCENTS.map((ch) => (
-                    <button key={ch} onPointerDown={(e) => e.preventDefault()} onClick={() => insert(ch)}>
-                      {ch}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {!choose && !verdict && (
-                <button
-                  className={`big ${blank && !selfGraded ? 'quiet' : 'primary'}`}
-                  onPointerDown={keepKeyboard}
-                  onClick={submit}
-                >
-                  {t(selfGraded ? 'Aufdecken' : blank ? 'Weiß ich nicht' : 'Prüfen')}
+          {!choose && !verdict && (
+            <div className="accents" aria-label="Sonderzeichen">
+              {ACCENTS.map((ch) => (
+                <button key={ch} onPointerDown={(e) => e.preventDefault()} onClick={() => insert(ch)}>
+                  {ch}
                 </button>
-              )}
+              ))}
+            </div>
+          )}
 
-              {verdict &&
-                (selfGraded ? (
-                  <div className="grades">
-                    <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Again)}>
-                      {t('Falsch')}
-                      <small>{again ? again[Rating.Again] : ' '}</small>
-                    </button>
-                    <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Hard)}>
-                      {t('Fast')}
-                      <small>{again ? again[Rating.Hard] : ' '}</small>
-                    </button>
-                    <button className="primary" onPointerDown={keepKeyboard} onClick={() => next(Rating.Good)}>
-                      {t('Richtig')}
+          {!choose && !verdict && (
+            <button className={`big ${blank && !selfGraded ? 'quiet' : 'primary'}`} onPointerDown={keepKeyboard} onClick={submit}>
+              {t(selfGraded ? 'Aufdecken' : blank ? 'Weiß ich nicht' : 'Prüfen')}
+            </button>
+          )}
+
+          {verdict &&
+            (selfGraded ? (
+              <div className="grades">
+                <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Again)}>
+                  {t('Falsch')}
+                  <small>{again ? again[Rating.Again] : ' '}</small>
+                </button>
+                <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Hard)}>
+                  {t('Fast')}
+                  <small>{again ? again[Rating.Hard] : ' '}</small>
+                </button>
+                <button className="primary" onPointerDown={keepKeyboard} onClick={() => next(Rating.Good)}>
+                  {t('Richtig')}
+                  <small>{again ? again[Rating.Good] : ' '}</small>
+                </button>
+                <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Easy)}>
+                  {t('Sehr leicht')}
+                  <small>{again ? again[Rating.Easy] : ' '}</small>
+                </button>
+              </div>
+            ) : (
+              <div className="grades">
+                {ok ? (
+                  <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Easy)}>
+                    {t('Wusste ich sofort')}
+                    <small>{again ? again[Rating.Easy] : ' '}</small>
+                  </button>
+                ) : (
+                  !choose &&
+                  !blank && (
+                    <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Good)}>
+                      {t('Zählt als richtig')}
                       <small>{again ? again[Rating.Good] : ' '}</small>
                     </button>
-                    <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Easy)}>
-                      {t('Sehr leicht')}
-                      <small>{again ? again[Rating.Easy] : ' '}</small>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grades">
-                    {ok ? (
-                      <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Easy)}>
-                        {t('Wusste ich sofort')}
-                        <small>{again ? again[Rating.Easy] : ' '}</small>
-                      </button>
-                    ) : (
-                      !choose &&
-                      !blank && (
-                        <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Good)}>
-                          {t('Zählt als richtig')}
-                          <small>{again ? again[Rating.Good] : ' '}</small>
-                        </button>
-                      )
-                    )}
-                    <button
-                      className="primary"
-                      autoFocus={choose}
-                      onPointerDown={keepKeyboard}
-                      onClick={() => next(AUTO_GRADE[verdict])}
-                    >
-                      {t('Weiter')}
-                      <small>{again ? again[AUTO_GRADE[verdict]] : ' '}</small>
-                    </button>
-                  </div>
-                ))}
-            </div>
-          </div>,
-          document.body,
-        )}
+                  )
+                )}
+                <button
+                  className="primary"
+                  autoFocus={choose}
+                  onPointerDown={keepKeyboard}
+                  onClick={() => next(AUTO_GRADE[verdict])}
+                >
+                  {t('Weiter')}
+                  <small>{again ? again[AUTO_GRADE[verdict]] : ' '}</small>
+                </button>
+              </div>
+            ))}
+        </div>
+      )}
 
       {confirmEnd && (
         <Confirm

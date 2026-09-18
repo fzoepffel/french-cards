@@ -107,7 +107,8 @@
 html,
 body {
   margin: 0;
-  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
   background: var(--paper);
   color: var(--ink);
   font: 17px/1.5 var(--sans);
@@ -128,12 +129,27 @@ body::before {
   background-size: 22px 22px;
 }
 
+/*
+ * The frame is the visible page: exactly the visual viewport, which on iOS ends
+ * where the keyboard begins. Everything inside is ordinary layout, so nothing has
+ * to be positioned around the keyboard.
+ */
+.frame {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
 main {
   position: relative;
   z-index: 1;
   max-width: 560px;
   margin: 0 auto;
-  min-height: 100dvh;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: calc(env(safe-area-inset-top) + 22px) 18px calc(env(safe-area-inset-bottom) + 28px);
   display: flex;
   flex-direction: column;
@@ -877,11 +893,8 @@ button.danger-link {
  * height of the bar at the foot, and iOS can leave it scrolled past the card.
  */
 .review {
-  /* the height set on the element is the whole story here, min-height would fight it */
-  min-height: 0;
   overflow: hidden;
-  /* the bar at the foot carries the safe area, so the screen above it needs none */
-  padding-bottom: 12px;
+  padding-bottom: 0;
 }
 
 .scroller {
@@ -917,20 +930,12 @@ button.danger-link {
   pointer-events: none;
 }
 
-.dock-layer {
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 4;
-  transition: bottom 0.18s ease-out;
-}
-
 .dock {
-  max-width: 560px;
-  margin: 0 auto;
+  flex: none;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin: 0 -18px;
   padding: 12px 18px calc(env(safe-area-inset-bottom) + 14px);
   background: var(--paper);
   border-top: var(--stroke) solid var(--outline);
@@ -938,22 +943,22 @@ button.danger-link {
 
 /* With the keyboard up the card has little room left, so the bar gives some back:
    no home indicator to clear, tighter spacing, and accents small enough for two rows. */
-.dock-layer.lifted .dock {
+.dock.compact {
   padding-bottom: 12px;
   padding-top: 10px;
   gap: 8px;
 }
 
-.dock-layer.lifted .answer {
+.dock.compact .answer {
   font-size: 1.15rem;
   padding: 11px 15px;
 }
 
-.dock-layer.lifted .accents {
+.dock.compact .accents {
   gap: 6px;
 }
 
-.dock-layer.lifted .accents button {
+.dock.compact .accents button {
   min-width: 40px;
   min-height: 38px;
   padding: 5px 0;
