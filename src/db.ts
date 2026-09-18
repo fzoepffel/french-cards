@@ -156,7 +156,8 @@ export async function stats(): Promise<Stats> {
 
   const midnight = new Date()
   midnight.setHours(0, 0, 0, 0)
-  const doneToday = await db.reviews.where('at').aboveOrEqual(midnight).count()
+  const reviewsToday = await db.reviews.where('at').aboveOrEqual(midnight).toArray()
+  const doneToday = new Set(reviewsToday.map((r) => r.id)).size
 
   return {
     due: all.filter((p) => isDue(p, now)).length,
@@ -237,6 +238,28 @@ export function placementBands(size = 500, perBand = 6): Band[] {
     bands.push({ from, to, cards: sample })
   }
   return bands
+}
+
+/**
+ * A voluntary extra round: due cards first, then unseen ones, ignoring the daily
+ * limits. Nothing else changes, so tomorrow's limits are untouched.
+ */
+export async function buildExtraQueue(count = 10): Promise<StudyCard[]> {
+  const all = (await db.progress.toArray()).filter((p) => CARD_BY_ID.has(p.id))
+  const seen = new Set(all.map((p) => p.id))
+  const now = Date.now()
+  const skip = getSkip()
+  const soonest = all
+    .filter((p) => !isDue(p, now))
+    .sort((a, b) => new Date(a.fsrs.due).getTime() - new Date(b.fsrs.due).getTime())
+    .map((p) => CARD_BY_ID.get(p.id)!)
+    .filter((c) => !isSkipped(c, skip))
+  const unseen = CARDS.filter((c) => !seen.has(c.id) && !isSkipped(c, skip))
+  const words = spread(unseen.filter((c) => bucketOf(c) === 'wort'))
+  const grammar = spread(unseen.filter((c) => bucketOf(c) === 'grammatik'))
+  const fresh = rotate([words, grammar]).slice(0, count)
+  // If every card has been seen already, pull the ones due soonest forward instead.
+  return fresh.length ? fresh : soonest.slice(0, count)
 }
 
 /** Records a grade and returns when the card is due next. */

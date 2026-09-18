@@ -88,31 +88,6 @@ export function Check() {
   )
 }
 
-/**
- * The tower draws itself line by line. Used on the finish screen, and small on
- * the home screen when the day is done. About 1 kB of markup, no image files.
- */
-export function Tower({ size = 120 }: { size?: number }) {
-  return (
-    <svg className="tower" width={size} height={size * 1.6} viewBox="0 0 100 160" fill="none" aria-hidden>
-      <g stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
-        {/* legs */}
-        <path className="draw d1" d="M14 150 C28 110 42 74 50 12" />
-        <path className="draw d1" d="M86 150 C72 110 58 74 50 12" />
-        {/* arch and platforms */}
-        <path className="draw d2" d="M24 118 C36 108 64 108 76 118" />
-        <path className="draw d2" d="M27 112h46" />
-        <path className="draw d3" d="M34 82h32" />
-        <path className="draw d3" d="M41 52h18" />
-        {/* lattice */}
-        <path className="draw d4" d="M31 100 41 84M69 100 59 84M38 74 45 56M62 74 55 56" />
-        <path className="draw d4" d="M44 44h12M46 34h8" />
-        <path className="draw d5" d="M50 12v-8" />
-      </g>
-    </svg>
-  )
-}
-
 /** Speaker icon for the pronunciation button. */
 export function SpeakerIcon() {
   return (

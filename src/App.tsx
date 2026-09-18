@@ -14,9 +14,10 @@ import {
 import { check, type Verdict } from './check'
 import { Confirm, type ConfirmProps } from './Confirm'
 import { canSpeak, getAutoSpeak, hasFrenchVoice, setAutoSpeak, speak } from './speak'
-import { Burst, Check, Mark, Ring, Seal, SpeakerIcon, Tower, Wordmark } from './Bits'
+import { Burst, Check, Mark, Ring, Seal, SpeakerIcon, Wordmark } from './Bits'
 import { SECTIONS } from './data/topics'
 import {
+  buildExtraQueue,
   buildQueue,
   exportBackup,
   getLimits,
@@ -222,19 +223,25 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
           </button>
         </section>
       ) : (
-        <button className="primary big" disabled={!total} onClick={() => start()}>
-          {total ? `Heutige Runde starten (${total} Karten)` : 'Heute schon erledigt'}
+        <button
+          className="primary big"
+          onClick={async () => {
+            const queue = total ? await buildQueue() : await buildExtraQueue(10)
+            if (queue.length) onStart(queue)
+          }}
+        >
+          {total ? `Heutige Runde starten (${total} Karten)` : 'Noch eine Runde (10 Karten)'}
         </button>
       )}
-      {firstRun ? null : total ? (
+      {!s || firstRun ? null : total ? (
         <p className="small center">
           Du tippst die französische Antwort. Falsche Karten kommen am Ende der Runde noch einmal.
         </p>
       ) : (
-        <div className="rest">
-          <Tower size={78} />
-          <p className="small center">Für heute fertig. Morgen sind die nächsten Karten dran.</p>
-        </div>
+        <p className="small center">
+          Dein Tagespensum ist geschafft. Eine Extra-Runde nimmt zusätzliche Karten vor, ohne dein Pensum für morgen
+          zu ändern.
+        </p>
       )}
 
       <section className="topics">
@@ -959,14 +966,8 @@ function Done({ result, onHome }: { result: SessionResult; onHome: () => void })
   return (
     <main className="done">
       <h1 className="center">Runde fertig</h1>
-      {perfect ? (
-        <div className="rest">
-          <Tower size={104} />
-          <p className="parfait">Parfait</p>
-        </div>
-      ) : (
-        <Seal score={`${result.right}/${result.reviewed}`} perfect={false} />
-      )}
+      <Seal score={`${result.right}/${result.reviewed}`} perfect={perfect} />
+      {perfect && <p className="parfait center">Parfait</p>}
       <p className="score">
         {perfect ? 'Alles richtig.' : `${result.right} von ${result.reviewed} richtig`}
       </p>

@@ -1054,13 +1054,9 @@ button.danger-link {
   justify-content: flex-start;
 }
 
-.seal,
-.tower {
+.seal {
   display: block;
   margin: 4px auto 0;
-}
-
-.seal {
   animation: stamp 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.5) both;
 }
 
@@ -1068,38 +1064,6 @@ button.danger-link {
   from {
     opacity: 0;
     transform: scale(0.7) rotate(-8deg);
-  }
-}
-
-.tower {
-  color: var(--primary);
-}
-
-.tower .draw {
-  stroke-dasharray: 200;
-  stroke-dashoffset: 200;
-  animation: draw 1.1s ease forwards;
-}
-
-.tower .d1 {
-  animation-delay: 0.05s;
-}
-.tower .d2 {
-  animation-delay: 0.45s;
-}
-.tower .d3 {
-  animation-delay: 0.65s;
-}
-.tower .d4 {
-  animation-delay: 0.85s;
-}
-.tower .d5 {
-  animation-delay: 1s;
-}
-
-@keyframes draw {
-  to {
-    stroke-dashoffset: 0;
   }
 }
 
