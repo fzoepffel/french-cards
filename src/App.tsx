@@ -27,6 +27,7 @@ import {
   cardsInTopic,
   dueTomorrow,
   getTheme,
+  markPlaced,
   streak,
   placementBands,
   preview,
@@ -161,6 +162,8 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
 
   const total = s ? s.due + s.newLeft.wort + s.newLeft.grammatik : 0
   const doneToday = s?.doneToday ?? 0
+  // Asked once: before anything has been learned and before a choice was made.
+  const firstRun = !!s && s.learned === 0 && !skip.placed
 
   return (
     <main className="home">
@@ -197,10 +200,33 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
         </div>
       </section>
 
-      <button className="primary big" disabled={!total} onClick={() => start()}>
-        {total ? `Heutige Runde starten (${total} Karten)` : 'Heute schon erledigt'}
-      </button>
-      {total ? (
+      {!s ? (
+        <div className="big placeholder" aria-hidden />
+      ) : firstRun ? (
+        <section className="firstrun">
+          <h2>Wie möchtest du anfangen?</h2>
+          <button className="big primary" onClick={onPlacement}>
+            Einstufung machen
+            <small>Ein kurzer Test überspringt, was du schon kannst</small>
+          </button>
+          <button
+            className="big"
+            onClick={() => {
+              markPlaced()
+              setSkipState(getSkip())
+              start()
+            }}
+          >
+            Von vorne anfangen
+            <small>Bei den häufigsten Wörtern beginnen</small>
+          </button>
+        </section>
+      ) : (
+        <button className="primary big" disabled={!total} onClick={() => start()}>
+          {total ? `Heutige Runde starten (${total} Karten)` : 'Heute schon erledigt'}
+        </button>
+      )}
+      {firstRun ? null : total ? (
         <p className="small center">
           Du tippst die französische Antwort. Falsche Karten kommen am Ende der Runde noch einmal.
         </p>
@@ -209,16 +235,6 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
           <Tower size={78} />
           <p className="small center">Für heute fertig. Morgen sind die nächsten Karten dran.</p>
         </div>
-      )}
-
-      {!skip.placed && (
-        <button className="invite" onClick={onPlacement}>
-          <strong>Zuerst einstufen lassen</strong>
-          <span>
-            Ein kurzer Test, der zeigt, welche Wörter du schon kannst. Übersprungen wird nur, was du am Ende
-            bestätigst.
-          </span>
-        </button>
       )}
 
       <section className="topics">
@@ -472,16 +488,23 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const [verdict, setVerdict] = useState<Verdict | null>(null)
   const [busy, setBusy] = useState(false)
   const result = useRef<SessionResult>({ reviewed: 0, right: 0, missed: [] })
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
   const [again, setAgain] = useState<Record<Grade, string> | null>(null)
   const [confirmEnd, setConfirmEnd] = useState(false)
 
   const selfGraded = card.format === 'sentence'
   const choose = card.format === 'choose'
+  // Whole sentences never fit on one line, so those answers get a box that wraps.
+  const multiline = card.format === 'sentence' || card.format === 'rewrite' || card.format === 'fix'
   const answers = acceptedAnswers(card)
 
   useEffect(() => {
-    inputRef.current?.focus()
+    const el = inputRef.current
+    el?.focus()
+    if (el instanceof HTMLTextAreaElement) {
+      el.style.height = 'auto'
+      el.style.height = `${el.scrollHeight}px`
+    }
     setAgain(null)
     // When the card comes back depends on the grade, so the buttons can say it.
     let current = true
@@ -540,7 +563,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   }
 
   const onKey = (e: React.KeyboardEvent) => {
-    if (e.key !== 'Enter') return
+    if (e.key !== 'Enter' || e.shiftKey) return
     e.preventDefault()
     if (!verdict) submit()
     else if (!selfGraded) next(AUTO_GRADE[verdict])
@@ -619,21 +642,44 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
         </>
       ) : (
         <>
-          <input
-            ref={inputRef}
-            className={`answer ${verdict ? (ok ? 'is-ok' : selfGraded ? '' : 'is-bad') : ''}`}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={onKey}
-            readOnly={!!verdict}
-            placeholder={PLACEHOLDER[card.format] ?? 'Antwort'}
-            lang="fr"
-            autoCapitalize="off"
-            autoCorrect="off"
-            autoComplete="off"
-            spellCheck={false}
-            enterKeyHint={verdict ? 'next' : 'done'}
-          />
+          {multiline ? (
+            <textarea
+              ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+              className={`answer ${verdict ? (ok ? 'is-ok' : selfGraded ? '' : 'is-bad') : ''}`}
+              value={input}
+              rows={2}
+              onChange={(e) => {
+                setInput(e.target.value)
+                e.target.style.height = 'auto'
+                e.target.style.height = `${e.target.scrollHeight}px`
+              }}
+              onKeyDown={onKey}
+              readOnly={!!verdict}
+              placeholder={PLACEHOLDER[card.format] ?? 'Antwort'}
+              lang="fr"
+              autoCapitalize="off"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
+              enterKeyHint={verdict ? 'next' : 'done'}
+            />
+          ) : (
+            <input
+              ref={inputRef as React.RefObject<HTMLInputElement>}
+              className={`answer ${verdict ? (ok ? 'is-ok' : selfGraded ? '' : 'is-bad') : ''}`}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={onKey}
+              readOnly={!!verdict}
+              placeholder={PLACEHOLDER[card.format] ?? 'Antwort'}
+              lang="fr"
+              autoCapitalize="off"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
+              enterKeyHint={verdict ? 'next' : 'done'}
+            />
+          )}
           {!verdict && (
             <div className="accents" aria-label="Sonderzeichen">
               {ACCENTS.map((ch) => (

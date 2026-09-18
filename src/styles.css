@@ -435,29 +435,6 @@ button.danger-link {
   letter-spacing: 0;
 }
 
-.invite {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  text-align: left;
-  background: var(--gold);
-  color: var(--on-light);
-  padding: 16px 18px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-
-.invite strong {
-  font-size: 1.1rem;
-  font-weight: 800;
-}
-
-.invite span {
-  font-size: 0.9rem;
-  font-weight: 600;
-  opacity: 0.85;
-}
-
 /* ---------------------------------------------------------------- topics */
 
 .topics {
@@ -1301,4 +1278,46 @@ button.danger-link {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* First run: choose how to start */
+.firstrun {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.firstrun h2 {
+  margin: 0 0 2px;
+}
+
+.firstrun button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.25;
+}
+
+.firstrun small {
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+textarea.answer {
+  resize: none;
+  overflow: hidden;
+  line-height: 1.35;
+  min-height: 92px;
+  font-family: inherit;
+}
+
+/* holds the space while today's numbers load */
+.placeholder {
+  height: 60px;
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  border: var(--stroke) dashed var(--line);
+  box-shadow: none;
 }

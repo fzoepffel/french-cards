@@ -90,6 +90,11 @@ export function setSkip(skip: SkipSettings) {
   }
 }
 
+/** Remembers that the learner has chosen how to start, so the choice is not asked again. */
+export function markPlaced() {
+  setSkip({ ...getSkip(), placed: true })
+}
+
 export function toggleTopicSkip(topic: string): SkipSettings {
   const skip = getSkip()
   const topics = skip.topics.includes(topic) ? skip.topics.filter((t) => t !== topic) : [...skip.topics, topic]
