@@ -73,7 +73,7 @@ export const SECTIONS: Section[] = [
   },
   {
     id: 'gebrauch',
-    title: 'Zeiten und Modi richtig einsetzen',
+    title: 'Zeiten und Modi',
     topics: [
       { id: 'pc-imparfait', title: 'Passé composé oder imparfait' },
       { id: 'si-saetze', title: 'Si-Sätze' },
@@ -87,7 +87,7 @@ export const SECTIONS: Section[] = [
   },
   {
     id: 'rektion',
-    title: 'Was nach Verben, Adjektiven und Nomen kommt',
+    title: 'Mit à, de oder ohne',
     topics: [
       { id: 'verb-praep', title: 'Verb + Präposition' },
       { id: 'verb-a-qn-de', title: 'à qn de faire qc' },
@@ -139,7 +139,7 @@ export const SECTIONS: Section[] = [
   },
   {
     id: 'schreibung',
-    title: 'Schreibung und Klang',
+    title: 'Schreiben & Aussprache',
     topics: [
       { id: 'homophone', title: 'Gleich klingende Wörter' },
       { id: 'elision-liaison', title: 'Elision und Liaison' },

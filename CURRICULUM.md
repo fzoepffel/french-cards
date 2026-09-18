@@ -53,7 +53,7 @@ Level: B1 going to B2. Prompts are German. Notes are German.
 - `passiv` Passive and alternatives: être + participle, on, se faire + infinitive
 - `pronominal` Pronominal verbs: se rendre compte, s'en aller, se moquer de
 
-### 5. Zeiten und Modi richtig einsetzen `gebrauch`
+### 5. Zeiten und Modi `gebrauch`
 - `pc-imparfait` Passé composé vs imparfait
 - `si-saetze` si + présent/futur, si + imparfait/conditionnel, si + plus-que-parfait/conditionnel passé
 - `subjonctif-ausloeser` il faut que, bien que, pour que, avant que, à moins que, emotions, doubt; and where not (après que, espérer que, je pense que)
@@ -63,7 +63,7 @@ Level: B1 going to B2. Prompts are German. Notes are German.
 - `faire-causatif` faire + infinitive, laisser + infinitive
 - `modalverben` tu devrais, j'aurais pu, il a dû partir
 
-### 6. Was nach Verben, Adjektiven und Nomen kommt `rektion`
+### 6. Mit à, de oder ohne `rektion`
 - `verb-praep` Verb + à / de / direct object / bare infinitive (penser à, arrêter de, aimer faire)
 - `verb-a-qn-de` demander à qn de faire, conseiller, permettre, interdire
 - `anders-als-deutsch` attendre qc, chercher qc, téléphoner à qn, obéir à qn, aider qn, se marier avec
@@ -95,7 +95,7 @@ Level: B1 going to B2. Prompts are German. Notes are German.
 - `redewendungen` poser un lapin, avoir le cafard, coûter les yeux de la tête
 - `register` Informal / neutral / formal (bouffer / manger / se nourrir), spoken forms (t'es, y a, chuis)
 
-### 11. Schreibung und Klang `schreibung`
+### 11. Schreiben & Aussprache `schreibung`
 - `homophone` a/à, ou/où, ces/ses/c'est/s'est, leur/leurs, quel/quelle/qu'elle
 - `elision-liaison` Élision and liaison
 - Later: dictation cards using the browser's built-in French speech
