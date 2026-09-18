@@ -149,7 +149,7 @@ export function Wordmark({ height = 46 }: { height?: number }) {
     { c: 'n', x: 164, y: 80, r: 4 },
   ]
   return (
-    <svg className="wordmark" height={height} viewBox="0 0 312 118" role="img" aria-label="neno">
+    <svg className="wordmark" height={height} viewBox="0 0 322 118" role="img" aria-label="neno">
       <g
         fontFamily="ui-rounded, 'SF Pro Rounded', Nunito, system-ui, sans-serif"
         fontSize="90"
@@ -168,7 +168,7 @@ export function Wordmark({ height = 46 }: { height?: number }) {
         ))}
       </g>
       {/* the final o: a speech bubble with its tail at the bottom left */}
-      <g transform="translate(36 6) scale(0.86)">
+      <g transform="translate(48 6) scale(0.86)">
         <path
           d="M232 20c-26 0-47 15-47 34 0 12 8 22 20 28l-14 20 30-13c3 1 7 1 11 1 26 0 47-15 47-36s-21-34-47-34z"
           fill="var(--gold)"
@@ -184,9 +184,9 @@ export function Wordmark({ height = 46 }: { height?: number }) {
       </g>
       {/* sparkle fan, as on the icon */}
       <g stroke="var(--gold)" strokeWidth="7" strokeLinecap="round">
-        <path d="M276 16 L270 2" />
-        <path d="M292 24 L298 9" />
-        <path d="M300 42 L308 36" />
+        <path d="M288 16 L282 2" />
+        <path d="M304 24 L310 9" />
+        <path d="M312 42 L320 36" />
       </g>
     </svg>
   )
