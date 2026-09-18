@@ -880,6 +880,8 @@ button.danger-link {
   /* the height set on the element is the whole story here, min-height would fight it */
   min-height: 0;
   overflow: hidden;
+  /* the bar at the foot carries the safe area, so the screen above it needs none */
+  padding-bottom: 12px;
 }
 
 .scroller {

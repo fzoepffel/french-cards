@@ -870,7 +870,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const showSource = card.format === 'rewrite' || (card.fr && !card.fr.includes('___') && card.format !== 'fix')
 
   return (
-    <main className="review" style={{ height: `calc(100dvh - ${kb}px)` }}>
+    <main className="review" style={{ height: `calc(100dvh - ${kb + dockH}px)` }}>
       <div className="progress">
         <button className="link" onClick={() => (result.current.reviewed ? setConfirmEnd(true) : onFinish(result.current))}>
           {t('Runde beenden')}
@@ -882,7 +882,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
         </span>
       </div>
 
-      <div className="scroller" style={{ paddingBottom: dockH + 16 }}>
+      <div className="scroller">
         <article className="card">
           <span className="tag">
             {topicTitle(card)} · {t(FORMAT_LABEL[card.format])}
