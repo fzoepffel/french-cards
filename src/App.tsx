@@ -190,12 +190,6 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
           </div>
           <p className="sub">{t('Vokabeln, Formen, Grammatik')}</p>
         </div>
-        {days > 0 && (
-          <span className="streak" title={t('Tage in Folge gelernt')}>
-            <b>{days}</b>
-            {t(days === 1 ? 'Tag' : 'Tage')}
-          </span>
-        )}
       </header>
 
       <section className="today">
@@ -210,6 +204,13 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
           <div>
             <span className="dot grammar" />
             <b>{s?.newLeft.grammatik ?? '·'}</b>{t('neue Grammatik')}</div>
+          {days > 0 && (
+            <div className="streak-line">
+              <span className="dot streak-dot" />
+              <b>{days}</b>
+              {t(days === 1 ? 'Tag in Folge' : 'Tage in Folge')}
+            </div>
+          )}
         </div>
       </section>
 
