@@ -61,7 +61,7 @@ export function Ring({ done, total }: { done: number; total: number }) {
         {total ? `${done}/${total}` : '✓'}
       </text>
       <text x="49" y="67" fontSize="9" fill="var(--ink-soft)" style={{ letterSpacing: '0.1em' }}>
-        HEUTE
+        {t('HEUTE')}
       </text>
     </svg>
   )

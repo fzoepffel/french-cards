@@ -25,3 +25,26 @@ for (const [input, answer, want] of cases) {
   if (got !== want) { fail++; console.log(`FAIL  "${input}" vs "${answer}" → ${got}, want ${want}`) }
 }
 console.log(fail ? `${fail} of ${cases.length} failed` : `all ${cases.length} passed`)
+
+// Filling a gap must not break French elision: "je allais" instead of "j'allais".
+import { readFileSync } from 'node:fs'
+// \b is ASCII-only in JavaScript, so an accent counts as a word break and
+// "problème auquel" would match as "me a". Look behind for any letter instead.
+const ELIDE = /(?<![\p{L}'’])(je|me|te|se|ne|le|la|de|que|ce)\s+([aeiouéèêàâîôûy])/iu
+// These words take no elision, which is exactly what their cards teach.
+const NO_ELISION = ['haine', 'onze', 'huit', 'héros', 'hasard']
+let elisionProblems = 0
+for (const pair of ['fr-de', 'fr-en']) {
+  const deck = JSON.parse(readFileSync(new URL(`../public/decks/${pair}.json`, import.meta.url), 'utf8'))
+  for (const card of deck.cards) {
+    if (!card.fr?.includes('___')) continue
+    const filled = card.fr.replace('___', card.answer)
+    const hit = ELIDE.exec(filled)
+    if (!hit) continue
+    const rest = filled.slice(hit.index + hit[0].length - 1)
+    if (NO_ELISION.some((w) => rest.toLowerCase().startsWith(w))) continue
+    elisionProblems++
+    console.log(`FAIL  ${pair} ${card.id}: ${filled}`)
+  }
+}
+console.log(elisionProblems ? `${elisionProblems} elision problems` : 'no elision problems in either deck')

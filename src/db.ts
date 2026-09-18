@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
+import { t } from './i18n'
 import { createEmptyCard, fsrs, generatorParameters, Rating, type Card, type Grade } from 'ts-fsrs'
 import { CARDS, CARD_BY_ID, SECTIONS, TOPIC_ORDER, bucketOf, type Bucket, type StudyCard } from './cards'
 
@@ -324,13 +325,13 @@ export async function dueTomorrow(): Promise<number> {
 /** German wording for how far away a due date is, for the grade buttons. */
 export function whenAgain(due: Date, now = new Date()): string {
   const minutes = Math.round((due.getTime() - now.getTime()) / 60000)
-  if (minutes < 60) return `in ${Math.max(1, minutes)} min`
+  if (minutes < 60) return t('in {n} min', { n: Math.max(1, minutes) })
   const days = Math.round(minutes / (60 * 24))
-  if (days <= 0) return 'später heute'
-  if (days === 1) return 'morgen'
-  if (days < 31) return `in ${days} Tagen`
+  if (days <= 0) return t('später heute')
+  if (days === 1) return t('morgen')
+  if (days < 31) return t('in {n} Tagen', { n: days })
   const months = Math.round(days / 30)
-  return months < 12 ? `in ${months} Monaten` : `in ${Math.round(days / 365)} Jahren`
+  return months < 12 ? t('in {n} Monaten', { n: months }) : t('in {n} Jahren', { n: Math.round(days / 365) })
 }
 
 /** What each grade would do to this card, so the buttons can say when it comes back. */

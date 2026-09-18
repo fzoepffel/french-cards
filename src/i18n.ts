@@ -177,6 +177,12 @@ const EN: Record<string, string> = {
   'Satz übersetzen': 'Translate the sentence',
 
   HEUTE: 'TODAY',
+  'in {n} min': 'in {n} min',
+  'später heute': 'later today',
+  morgen: 'tomorrow',
+  'in {n} Tagen': 'in {n} days',
+  'in {n} Monaten': 'in {n} months',
+  'in {n} Jahren': 'in {n} years',
   RICHTIG: 'CORRECT',
   '{done} von {total} Karten heute geschafft': '{done} of {total} cards done today',
   'Ergebnis {score}': 'Result {score}',

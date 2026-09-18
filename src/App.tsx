@@ -332,7 +332,7 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
         </label>
         <div className="row">
           <span>
-            Einstufung
+            {t('Einstufung')}
             {skip.knownWordRank
               ? t(': Wörter bis Rang {rank} übersprungen', { rank: skip.knownWordRank })
               : t(': noch nicht gemacht')}
