@@ -109,6 +109,7 @@ body {
   margin: 0;
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
   background: var(--paper);
   color: var(--ink);
   font: 17px/1.5 var(--sans);
@@ -127,6 +128,16 @@ body::before {
   opacity: 0.5;
   background-image: radial-gradient(circle at 1px 1px, rgba(46, 33, 28, 0.13) 1.5px, transparent 0);
   background-size: 22px 22px;
+}
+
+/*
+ * A column that scrolls must not squeeze its children: a flex child shrinks below
+ * its content by default, which clips the end of a button label or the foot of a
+ * card instead of scrolling the column.
+ */
+main > *,
+.scroller > * {
+  flex-shrink: 0;
 }
 
 /*
@@ -904,7 +915,7 @@ button.danger-link {
 }
 
 .scroller {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
   /* a short card sits in the middle of the space; "safe" keeps a tall one from
@@ -1252,6 +1263,12 @@ button.danger-link {
   display: flex;
   align-items: center;
   gap: 14px;
+}
+
+.answer-block .solution {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .hook {
