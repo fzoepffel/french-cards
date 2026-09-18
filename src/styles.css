@@ -1304,3 +1304,17 @@ textarea.answer {
   white-space: nowrap;
   line-height: 1;
 }
+
+/* the main action can carry a second line with the count */
+button.big {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+button.big small {
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0.85;
+}

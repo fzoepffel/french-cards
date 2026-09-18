@@ -25,8 +25,10 @@ const EN: Record<string, string> = {
   'Ein kurzer Test überspringt, was du schon kannst': 'A short test skips what you already know',
   'Von vorne anfangen': 'Start from the beginning',
   'Bei den häufigsten Wörtern beginnen': 'Begin with the most common words',
-  'Heutige Runde starten ({n} Karten)': "Start today's round ({n} cards)",
-  'Noch eine Runde (10 Karten)': 'Another round (10 cards)',
+  'Heutige Runde starten': "Start today's round",
+  'Heutige Runde fortsetzen': "Continue today's round",
+  'Noch eine Runde': 'Another round',
+  '{n} Karten': '{n} cards',
   'Du tippst die französische Antwort. Falsche Karten kommen am Ende der Runde noch einmal.':
     'You type the French answer. Cards you miss come back at the end of the round.',
   'Dein Tagespensum ist geschafft. Eine Extra-Runde nimmt zusätzliche Karten vor, ohne dein Pensum für morgen zu ändern.':

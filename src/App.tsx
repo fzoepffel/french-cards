@@ -238,7 +238,12 @@ function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void;
             if (queue.length) onStart(queue)
           }}
         >
-          {total ? t('Heutige Runde starten ({n} Karten)', { n: total }) : t('Noch eine Runde (10 Karten)')}
+          {total ? t(doneToday ? 'Heutige Runde fortsetzen' : 'Heutige Runde starten') : t('Noch eine Runde')}
+          <small>
+            {total
+              ? t(total === 1 ? 'noch {n} Karte' : 'noch {n} Karten', { n: total })
+              : t('{n} Karten', { n: 10 })}
+          </small>
         </button>
       )}
       {!s || firstRun ? null : total ? (
