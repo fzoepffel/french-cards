@@ -52,9 +52,12 @@ type Screen =
   | { name: 'placement' }
 
 interface SessionResult {
+  /** Cards answered, counted once each */
   reviewed: number
+  /** Cards right at the first attempt: later retries never repair a miss */
   right: number
   missed: StudyCard[]
+  scored: Set<string>
 }
 
 export default function App() {
@@ -494,7 +497,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const [picked, setPicked] = useState<string | null>(null)
   const [verdict, setVerdict] = useState<Verdict | null>(null)
   const [busy, setBusy] = useState(false)
-  const result = useRef<SessionResult>({ reviewed: 0, right: 0, missed: [] })
+  const result = useRef<SessionResult>({ reviewed: 0, right: 0, missed: [], scored: new Set() })
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
   const [again, setAgain] = useState<Record<Grade, string> | null>(null)
   const [confirmEnd, setConfirmEnd] = useState(false)
@@ -540,12 +543,13 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
     setBusy(true)
     await grade(card.id, g)
     const r = result.current
-    r.reviewed++
-    if (g === Rating.Again) {
-      if (!r.missed.includes(card)) r.missed.push(card)
-    } else {
-      r.right++
+    // Only the first attempt counts: a card you miss and then get right stays missed.
+    if (!r.scored.has(card.id)) {
+      r.scored.add(card.id)
+      r.reviewed++
+      if (g !== Rating.Again) r.right++
     }
+    if (g === Rating.Again && !r.missed.includes(card)) r.missed.push(card)
     // A missed card comes back at the end of this session; a correct one is done for today.
     const rest = queue.slice(1)
     const nextQueue = g === Rating.Again ? [...rest, card] : rest

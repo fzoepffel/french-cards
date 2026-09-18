@@ -6,11 +6,15 @@
     <rect x="188" y="118" width="212" height="272" rx="36" fill="#f7f1e8" transform="rotate(4 294 254)"/>
     <path d="M294 196c-49 0-89 31-89 69 0 23 14 43 36 56l-11 33 41-24c7 1 15 2 23 2 49 0 89-30 89-67s-40-69-89-69z" fill="#f5a623"/>
   </g>
-  <g fill="#2e211c">
-    <circle cx="258" cy="264" r="15"/>
-    <circle cx="300" cy="264" r="15"/>
-    <circle cx="342" cy="264" r="15"/>
+  <defs>
+    <clipPath id="flagClipA"><rect x="250" y="234" width="100" height="64" rx="11"/></clipPath>
+  </defs>
+  <g clip-path="url(#flagClipA)">
+    <rect x="250" y="234" width="34" height="64" fill="#1b3a8f"/>
+    <rect x="284" y="234" width="33" height="64" fill="#fffdf7"/>
+    <rect x="317" y="234" width="33" height="64" fill="#c8102e"/>
   </g>
+  <rect x="250" y="234" width="100" height="64" rx="11" fill="none" stroke="#2e211c" stroke-width="9"/>
   <g stroke="#ffc247" stroke-width="17" stroke-linecap="round">
     <path d="M400 118v-34"/>
     <path d="M428 140l24-24"/>
@@ -35,5 +39,6 @@
   <g stroke="#f5a623" stroke-width="7" stroke-linecap="round">
     <path d="M276 16 L270 2"/><path d="M292 24 L298 9"/><path d="M300 42 L308 36"/>
   </g>
+
   </g>
 </svg>

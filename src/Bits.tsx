@@ -13,11 +13,18 @@ export function Mark() {
           fill="var(--gold)"
         />
       </g>
-      <g fill="var(--outline)">
-        <circle cx="258" cy="264" r="15" />
-        <circle cx="300" cy="264" r="15" />
-        <circle cx="342" cy="264" r="15" />
+      {/* the tricolore says which language this is */}
+      <defs>
+        <clipPath id="markFlag">
+          <rect x="250" y="234" width="100" height="64" rx="11" />
+        </clipPath>
+      </defs>
+      <g clipPath="url(#markFlag)">
+        <rect x="250" y="234" width="34" height="64" fill="#1b3a8f" />
+        <rect x="284" y="234" width="33" height="64" fill="#fffdf7" />
+        <rect x="317" y="234" width="33" height="64" fill="#c8102e" />
       </g>
+      <rect x="250" y="234" width="100" height="64" rx="11" fill="none" stroke="var(--outline)" strokeWidth="9" />
       <g stroke="var(--gold)" strokeWidth="17" strokeLinecap="round">
         <path d="M400 118v-34" />
         <path d="M428 140l24-24" />
