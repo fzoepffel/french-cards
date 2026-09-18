@@ -176,6 +176,11 @@ const EN: Record<string, string> = {
   'Fehler finden': 'Find the mistake',
   'Satz übersetzen': 'Translate the sentence',
 
+  HEUTE: 'TODAY',
+  RICHTIG: 'CORRECT',
+  '{done} von {total} Karten heute geschafft': '{done} of {total} cards done today',
+  'Ergebnis {score}': 'Result {score}',
+
   // boot
   'Die Karten konnten nicht geladen werden. Prüfe die Verbindung und öffne die App noch einmal.':
     'The cards could not be loaded. Check your connection and open the app again.',

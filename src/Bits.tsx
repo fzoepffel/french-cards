@@ -1,4 +1,5 @@
 /** Small presentational pieces shared across the screens. */
+import { t } from './i18n'
 
 /** The app mark: the two cards and speech bubble from the icon. */
 export function Mark() {
@@ -41,7 +42,7 @@ export function Ring({ done, total }: { done: number; total: number }) {
   const c = 2 * Math.PI * r
   const share = total ? Math.min(1, done / total) : 1
   return (
-    <svg className="ring" viewBox="0 0 98 98" role="img" aria-label={`${done} von ${total} Karten heute geschafft`}>
+    <svg className="ring" viewBox="0 0 98 98" role="img" aria-label={t('{done} von {total} Karten heute geschafft', { done, total })}>
       <circle className="rim" cx="49" cy="49" r={r + 6} fill="none" />
       <circle className="rim" cx="49" cy="49" r={r - 6} fill="none" />
       <circle className="track" cx="49" cy="49" r={r} />
@@ -69,7 +70,7 @@ export function Ring({ done, total }: { done: number; total: number }) {
 /** A sticker medal with the score, for the end of a round. */
 export function Seal({ score, perfect }: { score: string; perfect: boolean }) {
   return (
-    <svg className="seal" width="150" height="168" viewBox="0 0 150 168" role="img" aria-label={`Ergebnis ${score}`}>
+    <svg className="seal" width="150" height="168" viewBox="0 0 150 168" role="img" aria-label={t('Ergebnis {score}', { score })}>
       <g stroke="var(--outline)" strokeWidth="5" strokeLinejoin="round">
         <path d="M58 104 L44 160 L64 146 L75 164 L75 104Z" fill="var(--primary)" />
         <path d="M92 104 L106 160 L86 146 L75 164 L75 104Z" fill="var(--accent)" />
@@ -80,7 +81,7 @@ export function Seal({ score, perfect }: { score: string; perfect: boolean }) {
         {score}
       </text>
       <text x="75" y="92" textAnchor="middle" fontSize="9" fontWeight="800" fill="var(--ink-soft)" letterSpacing="1.5">
-        {perfect ? 'PARFAIT' : 'RICHTIG'}
+        {perfect ? 'PARFAIT' : t('RICHTIG')}
       </text>
     </svg>
   )

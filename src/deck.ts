@@ -27,13 +27,20 @@ export const PAIRS: { id: Pair; label: string }[] = [
 const PAIR_KEY = 'neno.pair'
 
 export function getPair(): Pair {
+  // ?lang=en opens the English edition directly, and is remembered afterwards.
+  const asked = new URLSearchParams(location.search).get('lang')
+  if (asked === 'en' || asked === 'de') {
+    const pair = `fr-${asked}` as Pair
+    setPair(pair)
+    return pair
+  }
   try {
     const stored = localStorage.getItem(PAIR_KEY)
     if (stored && PAIRS.some((p) => p.id === stored)) return stored as Pair
   } catch {
     /* storage unavailable, fall through to the browser's language */
   }
-  return navigator.language?.toLowerCase().startsWith('de') ? 'fr-de' : 'fr-de'
+  return navigator.language?.toLowerCase().startsWith('de') ? 'fr-de' : 'fr-en'
 }
 
 export function setPair(pair: Pair) {

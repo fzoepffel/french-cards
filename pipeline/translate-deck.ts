@@ -18,6 +18,7 @@ const { values } = parseArgs({
     concurrency: { type: 'string', default: '4' },
     'max-usd': { type: 'string', default: '45' },
     'dry-run': { type: 'boolean', default: false },
+    'only-missing': { type: 'boolean', default: false },
   },
 })
 
@@ -79,11 +80,21 @@ Replace each card with one that teaches the equivalent difficulty for an English
 - Easily confused: pairs English speakers mix up (savoir/connaître, an/année, visiter/rendre visite, apporter/emmener).
 - Different from English: verbs whose complement differs from English (attendre with no preposition where English says wait for, chercher, écouter, payer, demander).
 
-For each card return: de (the English prompt), fr (French sentence with ___ , or empty for translate cards), task, hint, answer (the French answer), note (one or two English sentences explaining the trap). Keep the format and the id you were given. Never use dashes (— or –).`
+For each card return: de (the English prompt), fr (French sentence with ___ , or empty for translate cards), task, hint, answer (the French answer), options (for choose cards: two to four French fillers, one of them exactly the answer; empty array otherwise), note (one or two English sentences explaining the trap). Keep the format and the id you were given. Never use dashes (— or –).`
 
 const Rewritten = z.object({
   cards: z.array(
-    z.object({ id: z.string(), de: z.string(), fr: z.string(), task: z.string(), hint: z.string(), answer: z.string(), note: z.string() }),
+    z.object({
+      id: z.string(),
+      de: z.string(),
+      fr: z.string(),
+      task: z.string(),
+      hint: z.string(),
+      answer: z.string(),
+      /** For choose cards: the options, one of them the answer. Empty otherwise. */
+      options: z.array(z.string()),
+      note: z.string(),
+    }),
   ),
 })
 
@@ -119,8 +130,11 @@ const clean = (c: Card) => ({
   note: c.note ?? '',
 })
 
-const plain = deck.cards.filter((c) => !CONTRASTIVE.has(c.topic)).slice(0, Number(values.limit))
-const contrastive = deck.cards.filter((c) => CONTRASTIVE.has(c.topic)).slice(0, Number(values.limit))
+const existing: Card[] = existsSync(out) ? JSON.parse(readFileSync(out, 'utf8')).cards : []
+const have = new Set(values['only-missing'] ? existing.map((c) => c.id) : [])
+const todo = deck.cards.filter((c) => !have.has(c.id))
+const plain = todo.filter((c) => !CONTRASTIVE.has(c.topic)).slice(0, Number(values.limit))
+const contrastive = todo.filter((c) => CONTRASTIVE.has(c.topic)).slice(0, Number(values.limit))
 console.log(`${plain.length} cards to localise, ${contrastive.length} to replace`)
 if (values['dry-run']) process.exit(0)
 
@@ -195,6 +209,7 @@ await pool(
         task: t.task || undefined,
         hint: t.hint || undefined,
         answer: t.answer || original.answer,
+        options: t.options.length ? t.options : original.options,
         accept: undefined,
         note: t.note,
       }

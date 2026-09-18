@@ -15,11 +15,15 @@ const { values } = parseArgs({
     ids: { type: 'string' },
     apply: { type: 'boolean', default: false },
     limit: { type: 'string', default: '400' },
+    deck: { type: 'string' },
   },
 })
 
-const deckPath = new URL('../src/data/cards.json', import.meta.url)
-const cards: Card[] = JSON.parse(readFileSync(deckPath, 'utf8'))
+// Either a deck file (public/decks/*.json) or the German source deck.
+const deckPath = new URL(values.deck ?? '../src/data/cards.json', import.meta.url)
+const raw = JSON.parse(readFileSync(deckPath, 'utf8'))
+const isDeckFile = !Array.isArray(raw)
+const cards: Card[] = isDeckFile ? raw.cards : raw
 const only = new Set((values.ids ?? '').split(',').filter(Boolean))
 
 const targets = cards
@@ -44,14 +48,18 @@ const Output = z.object({
   ),
 })
 
-const SYSTEM = `You check flashcards for a French learning app. Each card has a German prompt, a French sentence with a gap, and the answer that belongs in the gap.
+const promptLanguage = isDeckFile && raw.ui === 'en' ? 'English' : 'German'
+
+const SYSTEM = `You check flashcards for a French learning app. Each card has a prompt in ${promptLanguage}, a French sentence with a gap, and the answer that belongs in the gap.
+
+Judge the French only. The prompt is written in ${promptLanguage} on purpose: never rewrite it into another language, and never report its language as a problem.
 
 For each card, put the answer into the gap and judge the finished sentence:
 - Is it grammatical French?
 - Does it say what the German prompt says?
 - Would a French speaker write it that way?
 
-Set ok true when the sentence is right. Otherwise set ok false, name the problem in one short German sentence, and repair it: give a corrected French sentence that still contains the answer word for word, with ___ in its place, and a German prompt that matches. Keep the answer itself unchanged, keep the sentence short and everyday, and keep the card teaching the same point.
+Set ok true when the sentence is right. Otherwise set ok false, name the problem in one short sentence, and repair it: give a corrected French sentence that still contains the answer word for word, with ___ in its place, and a prompt in ${promptLanguage} that matches. Keep the answer itself unchanged, keep the sentence short and everyday, and keep the card teaching the same point.
 
 A frequent fault: the answer is an infinitive expression (avoir de la chance) but the sentence is built around a conjugated verb, so the filled sentence reads "Tu as vraiment avoir de la chance". Rebuild the sentence so the answer fits verbatim.`
 
@@ -116,7 +124,8 @@ if (values.apply && fixed) {
     lines.push(`  ${JSON.stringify(c)},`)
     lastTopic = c.topic
   }
-  writeFileSync(deckPath, `[\n${lines.join('\n').replace(/,$/, '')}\n]\n`)
+  if (isDeckFile) writeFileSync(deckPath, JSON.stringify({ ...raw, cards }))
+  else writeFileSync(deckPath, `[\n${lines.join('\n').replace(/,$/, '')}\n]\n`)
 }
 
 const cost = (usedIn * 5 + usedOut * 25) / 1e6

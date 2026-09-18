@@ -10,9 +10,20 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['apple-touch-icon.png', 'icon.svg'],
       workbox: {
-        // decks are fetched at runtime; precache them so the app works offline
-        globPatterns: ['**/*.{js,css,html,svg,png,json}'],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // Precache the shell, but not the decks: only the language actually in use
+        // should end up on the device. The deck is cached the first time it loads.
+        globPatterns: ['**/*.{js,css,html,svg,png}', 'manifest.webmanifest'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.includes('/decks/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'neno-decks',
+              expiration: { maxEntries: 4 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
       manifest: {
         name: 'Neno: Französisch',
