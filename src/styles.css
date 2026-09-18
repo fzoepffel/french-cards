@@ -933,9 +933,28 @@ button.danger-link {
   border-top: var(--stroke) solid var(--outline);
 }
 
-/* with the keyboard up, the home indicator is covered and needs no room */
+/* With the keyboard up the card has little room left, so the bar gives some back:
+   no home indicator to clear, tighter spacing, and accents small enough for two rows. */
 .dock-layer.lifted .dock {
-  padding-bottom: 14px;
+  padding-bottom: 12px;
+  padding-top: 10px;
+  gap: 8px;
+}
+
+.dock-layer.lifted .answer {
+  font-size: 1.15rem;
+  padding: 11px 15px;
+}
+
+.dock-layer.lifted .accents {
+  gap: 6px;
+}
+
+.dock-layer.lifted .accents button {
+  min-width: 40px;
+  min-height: 38px;
+  padding: 5px 0;
+  font-size: 1.05rem;
 }
 
 .progress {

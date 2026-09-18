@@ -643,24 +643,33 @@ function Home({
 const ACCENTS = ['é', 'è', 'ê', 'à', 'â', 'ç', 'ù', 'û', 'î', 'ï', 'ô', 'œ', 'ë']
 
 /**
- * How much of the window the on-screen keyboard covers. iOS does not shrink the
- * layout viewport for it, so a bar that should stay visible has to be lifted by hand.
+ * The part of the window a card screen can actually use, and how far the keyboard
+ * reaches up from the bottom. Browsers differ: some shrink the layout viewport for
+ * the keyboard, some leave it alone and only shrink the visual viewport. Measuring
+ * both from the visual viewport covers either case, and asking for 100dvh as well
+ * would count the keyboard twice where the layout does shrink.
  */
-function useKeyboardInset() {
-  const [inset, setInset] = useState(0)
-  useEffect(() => {
+function useViewport() {
+  const read = () => {
     const vv = window.visualViewport
-    if (!vv) return
-    const update = () => setInset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop))
-    vv.addEventListener('resize', update)
-    vv.addEventListener('scroll', update)
+    if (!vv) return { height: window.innerHeight, inset: 0 }
+    return { height: vv.height, inset: Math.max(0, window.innerHeight - vv.height - vv.offsetTop) }
+  }
+  const [box, setBox] = useState(read)
+  useEffect(() => {
+    const update = () => setBox(read())
+    const vv = window.visualViewport
+    vv?.addEventListener('resize', update)
+    vv?.addEventListener('scroll', update)
+    window.addEventListener('resize', update)
     update()
     return () => {
-      vv.removeEventListener('resize', update)
-      vv.removeEventListener('scroll', update)
+      vv?.removeEventListener('resize', update)
+      vv?.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
     }
   }, [])
-  return inset
+  return box
 }
 
 /**
@@ -765,7 +774,9 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
 
   const selfGraded = card.format === 'sentence'
   const choose = card.format === 'choose'
-  const kb = useKeyboardInset()
+  const view = useViewport()
+  // ?debug=1 puts the layout numbers on screen, the only way to see them on a phone
+  const debug = new URLSearchParams(location.search).has('debug')
   const dockRef = useRef<HTMLDivElement>(null)
   const [dockH, setDockH] = useState(0)
   // Typed cards keep the keyboard open for the whole round: every button below
@@ -870,15 +881,15 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const showSource = card.format === 'rewrite' || (card.fr && !card.fr.includes('___') && card.format !== 'fix')
 
   return (
-    <main className="review" style={{ height: `calc(100dvh - ${kb + dockH}px)` }}>
+    <main className="review" style={{ height: Math.max(120, view.height - dockH) }}>
       <div className="progress">
         <button className="link" onClick={() => (result.current.reviewed ? setConfirmEnd(true) : onFinish(result.current))}>
           {t('Runde beenden')}
         </button>
         <span>
-          {t(queue.length === 1 ? 'noch {n} Karte' : 'noch {n} Karten', {
-            n: queue.length,
-          })}
+          {debug
+            ? `vv${Math.round(view.height)} in${Math.round(view.inset)} ih${window.innerHeight} dock${dockH}`
+            : t(queue.length === 1 ? 'noch {n} Karte' : 'noch {n} Karten', { n: queue.length })}
         </span>
       </div>
 
@@ -980,7 +991,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
           to the body instead. */}
       {!(choose && !verdict) &&
         createPortal(
-          <div className={`dock-layer ${kb > 0 ? 'lifted' : ''}`} style={{ bottom: kb }}>
+          <div className={`dock-layer ${view.inset > 0 ? 'lifted' : ''}`} style={{ bottom: view.inset }}>
             <div className="dock" ref={dockRef}>
               {!choose &&
                 (multiline ? (
