@@ -888,6 +888,9 @@ button.danger-link {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* a short card sits in the middle of the space; "safe" keeps a tall one from
+     having its top cut off, and browsers without it simply start at the top */
+  justify-content: safe center;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   display: flex;
