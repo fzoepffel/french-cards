@@ -870,7 +870,7 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const showSource = card.format === 'rewrite' || (card.fr && !card.fr.includes('___') && card.format !== 'fix')
 
   return (
-    <main className="review" style={{ paddingBottom: dockH + 28 }}>
+    <main className="review" style={{ height: `calc(100dvh - ${kb}px)` }}>
       <div className="progress">
         <button className="link" onClick={() => (result.current.reviewed ? setConfirmEnd(true) : onFinish(result.current))}>
           {t('Runde beenden')}
@@ -882,96 +882,98 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
         </span>
       </div>
 
-      <article className="card">
-        <span className="tag">
-          {topicTitle(card)} · {t(FORMAT_LABEL[card.format])}
-        </span>
-        {card.format === 'conjugate' ? (
-          <>
-            <div className="bubble">
-              <p className="prompt" lang="fr">
-                {card.task}
-              </p>
-            </div>
-            {card.de && <p className="hint">{card.de}</p>}
-          </>
-        ) : (
-          <>
-            {card.de && (
+      <div className="scroller" style={{ paddingBottom: dockH + 16 }}>
+        <article className="card">
+          <span className="tag">
+            {topicTitle(card)} · {t(FORMAT_LABEL[card.format])}
+          </span>
+          {card.format === 'conjugate' ? (
+            <>
               <div className="bubble">
-                <p className="prompt">{card.de}</p>
+                <p className="prompt" lang="fr">
+                  {card.task}
+                </p>
               </div>
-            )}
-            {card.fr?.includes('___') && (
-              <p className="cloze" lang="fr">
-                {card.fr}
-              </p>
-            )}
-            {showSource && (
-              <p className="cloze" lang="fr">
-                {card.fr}
-              </p>
-            )}
-            {card.format === 'fix' && <p className="task">{t('Finde den Fehler und schreib den Satz richtig.')}</p>}
-            {card.task && <p className="task">{card.task}</p>}
+              {card.de && <p className="hint">{card.de}</p>}
+            </>
+          ) : (
+            <>
+              {card.de && (
+                <div className="bubble">
+                  <p className="prompt">{card.de}</p>
+                </div>
+              )}
+              {card.fr?.includes('___') && (
+                <p className="cloze" lang="fr">
+                  {card.fr}
+                </p>
+              )}
+              {showSource && (
+                <p className="cloze" lang="fr">
+                  {card.fr}
+                </p>
+              )}
+              {card.format === 'fix' && <p className="task">{t('Finde den Fehler und schreib den Satz richtig.')}</p>}
+              {card.task && <p className="task">{card.task}</p>}
+            </>
+          )}
+          {card.hint && <p className="hint">{card.hint}</p>}
+        </article>
+
+        {choose && (
+          <>
+            {!verdict && <p className="small center">{t('Tippe die richtige Form an.')}</p>}
+            <div className="options">
+              {card.options!.map((o) => {
+                const state = !verdict ? '' : o === card.answer ? 'is-ok' : o === picked ? 'is-bad' : 'is-dim'
+                return (
+                  <button key={o} className={`option ${state}`} lang="fr" onClick={() => pick(o)} disabled={!!verdict}>
+                    {o}
+                  </button>
+                )
+              })}
+            </div>
           </>
         )}
-        {card.hint && <p className="hint">{card.hint}</p>}
-      </article>
 
-      {choose && (
-        <>
-          {!verdict && <p className="small center">{t('Tippe die richtige Form an.')}</p>}
-          <div className="options">
-            {card.options!.map((o) => {
-              const state = !verdict ? '' : o === card.answer ? 'is-ok' : o === picked ? 'is-bad' : 'is-dim'
-              return (
-                <button key={o} className={`option ${state}`} lang="fr" onClick={() => pick(o)} disabled={!!verdict}>
-                  {o}
+        {verdict && (
+          <section className="reveal" aria-live="polite">
+            {!selfGraded && (
+              <p className={`verdict ${ok ? 'ok' : 'bad'}`}>
+                {t(VERDICT_TEXT[verdict])}
+                {verdict === 'correct' && <Burst />}
+              </p>
+            )}
+            {selfGraded && verdict !== 'wrong' && <p className="verdict ok">{t(VERDICT_TEXT[verdict])}</p>}
+            <div className="answer-block">
+              {hook && (
+                <span className="hook" aria-hidden>
+                  {hook}
+                </span>
+              )}
+              <p className="solution" lang="fr">
+                {card.format === 'translate' ? <Gendered answer={card.answer} /> : spoken}
+              </p>
+              {canSpeak() && (
+                <button
+                  className="icon speak"
+                  onPointerDown={keepKeyboard}
+                  onClick={() => speak(spoken)}
+                  aria-label={t('Aussprache anhören')}
+                >
+                  <SpeakerIcon />
                 </button>
-              )
-            })}
-          </div>
-        </>
-      )}
-
-      {verdict && (
-        <section className="reveal" aria-live="polite">
-          {!selfGraded && (
-            <p className={`verdict ${ok ? 'ok' : 'bad'}`}>
-              {t(VERDICT_TEXT[verdict])}
-              {verdict === 'correct' && <Burst />}
-            </p>
-          )}
-          {selfGraded && verdict !== 'wrong' && <p className="verdict ok">{t(VERDICT_TEXT[verdict])}</p>}
-          <div className="answer-block">
-            {hook && (
-              <span className="hook" aria-hidden>
-                {hook}
-              </span>
+              )}
+            </div>
+            {verdict === 'accent' && <p className="small">{t('Akzente zählen als Fehler, sie verändern die Aussprache.')}</p>}
+            {verdict === 'typo' && (
+              <p className="small">{t('Ein Buchstabe daneben. Zählt als gewusst, kommt aber früher wieder.')}</p>
             )}
-            <p className="solution" lang="fr">
-              {card.format === 'translate' ? <Gendered answer={card.answer} /> : spoken}
-            </p>
-            {canSpeak() && (
-              <button
-                className="icon speak"
-                onPointerDown={keepKeyboard}
-                onClick={() => speak(spoken)}
-                aria-label={t('Aussprache anhören')}
-              >
-                <SpeakerIcon />
-              </button>
-            )}
-          </div>
-          {verdict === 'accent' && <p className="small">{t('Akzente zählen als Fehler, sie verändern die Aussprache.')}</p>}
-          {verdict === 'typo' && (
-            <p className="small">{t('Ein Buchstabe daneben. Zählt als gewusst, kommt aber früher wieder.')}</p>
-          )}
-          {card.note && <p className="note">{card.note}</p>}
-          {selfGraded && <p className="small">{t('Vergleiche mit deiner Antwort. Wie gut wusstest du es?')}</p>}
-        </section>
-      )}
+            {card.note && <p className="note">{card.note}</p>}
+            {selfGraded && <p className="small">{t('Vergleiche mit deiner Antwort. Wie gut wusstest du es?')}</p>}
+          </section>
+        )}
+      </div>
 
       {/* The answer field and its buttons stay above the keyboard. The review screen is
           animated, which would make a fixed child sit inside it on Safari, so this goes

@@ -16,5 +16,22 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <script>
+setTimeout(() => {
+  const b = [...document.querySelectorAll('button.big')].find(x => /round|beginning|Runde|vorne/i.test(x.textContent))
+  b && b.click()
+}, 2500)
+setTimeout(() => {
+  const sc = document.querySelector('.scroller')
+  const dock = document.querySelector('.dock-layer')
+  const m = document.querySelector('main.review')
+  document.title = 'pageSH=' + document.documentElement.scrollHeight + ' innerH=' + innerHeight +
+    ' mainH=' + (m && Math.round(m.getBoundingClientRect().height)) +
+    ' scrollerH=' + (sc && Math.round(sc.getBoundingClientRect().height)) +
+    ' content=' + (sc && sc.scrollHeight) +
+    ' dockTop=' + (dock && Math.round(dock.getBoundingClientRect().top)) +
+    ' buttons=' + [...document.querySelectorAll('button')].slice(0, 4).map(b => b.textContent.slice(0, 22)).join('/')
+}, 6000)
+</script>
+</body>
 </html>

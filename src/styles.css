@@ -872,6 +872,28 @@ button.danger-link {
 /* ---------------------------------------------------------------- review */
 
 /*
+ * The review screen is exactly the space above the keyboard and never scrolls
+ * itself: the card area scrolls inside it instead. Otherwise the page grows by the
+ * height of the bar at the foot, and iOS can leave it scrolled past the card.
+ */
+.review {
+  /* the height set on the element is the whole story here, min-height would fight it */
+  min-height: 0;
+  overflow: hidden;
+}
+
+.scroller {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/*
  * The answer field and its buttons sit in a bar at the foot of the window. On a
  * phone the software keyboard covers that spot, so the bar is lifted by however
  * much of the window the keyboard takes (see useKeyboardInset).
