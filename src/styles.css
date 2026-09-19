@@ -1021,20 +1021,33 @@ button.danger-link {
   }
 }
 
+/*
+ * Keys for the letters a keyboard makes awkward. They are a convenience, not the
+ * main way to type, so they are drawn small: two rows instead of three, with a
+ * thinner outline and a shallower shadow than the buttons that carry an action.
+ */
 .accents {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(7, 40px);
+  justify-content: center;
+  gap: 6px;
 }
 
 .accents button {
-  min-width: 46px;
-  min-height: 44px;
-  padding: 8px 0;
-  font-size: 1.15rem;
+  min-width: 0;
+  min-height: 34px;
+  padding: 3px 0;
+  font-size: 1rem;
   font-weight: 700;
-  border-radius: 12px;
+  border-width: 2px;
+  border-radius: 9px;
+  box-shadow: 2px 2px 0 var(--outline);
   background: var(--paper-2);
+}
+
+.accents button:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 
 .options {
