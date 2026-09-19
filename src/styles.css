@@ -128,16 +128,6 @@ body::before {
   background-size: 22px 22px;
 }
 
-/*
- * A column that scrolls must not squeeze its children: a flex child shrinks below
- * its content by default, which clips the end of a button label or the foot of a
- * card instead of scrolling the column.
- */
-main > *,
-.scroller > * {
-  flex-shrink: 0;
-}
-
 main {
   position: relative;
   z-index: 1;
@@ -881,178 +871,7 @@ button.danger-link {
 
 /* ---------------------------------------------------------------- review */
 
-/*
- * The review screen is exactly the space above the keyboard and never scrolls
- * itself: the card area scrolls inside it instead. Otherwise the page grows by the
- * height of the bar at the foot, and iOS can leave it scrolled past the card.
- */
-
-
-.scroller {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-/*
- * The answer field and its buttons sit in a bar at the foot of the window. On a
- * phone the software keyboard covers that spot, so the bar is lifted by however
- * much of the window the keyboard takes (see useKeyboardInset).
- */
-/* Off-screen, only ever focused to bring the keyboard up before a round starts. */
-.kb-primer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  border: none;
-  opacity: 0;
-  font-size: 16px;
-  pointer-events: none;
-}
-
-/*
- * The answer bar is the last thing on the page, in ordinary flow. When the field
- * takes focus the browser scrolls it into view above the keyboard, and the bar is
- * scrolled along with it, so no measurement of the keyboard is needed anywhere.
- */
-.dock {
-  /* Safari floats its address pill over the foot of the page, so a scroll that brings
-     the bar into view leaves room for it. This is spacing for scrolling only: it costs
-     the layout nothing when everything already fits. */
-  scroll-margin-bottom: 24px;
-  margin: auto -18px 0;
-  padding: 12px 18px calc(env(safe-area-inset-bottom) + 14px);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: var(--paper);
-  border-top: var(--stroke) solid var(--outline);
-}
-
-/*
- * With the keyboard up there is very little room, so the card and the bar both give
- * ground: one row of accents that scrolls sideways, a shorter button, and a card
- * with less padding. The screen also stops filling the window and shrinks to its
- * content, which brings the bar up against the card instead of a screen below it.
- */
-.review.typing {
-  min-height: 0;
-  padding-bottom: 12px;
-}
-
-/* the card's own label already says what to do, so the sentence saying it can go */
-.review.typing .instruction {
-  display: none;
-}
-
-/*
- * A long question would push the answer bar off the screen while typing. Instead the
- * question keeps a fixed share of the screen and scrolls within itself, so question
- * and bar are always on screen together. The negative margins give the card's shadow
- * room to sit outside the scrolling box.
- */
-.review.typing .scroller {
-  /* Pinned under the round header: if the card and the bar together still do not fit,
-     the page scrolls the bar into reach and the question stays on screen anyway. */
-  position: sticky;
-  top: 40px;
-  z-index: 1;
-  background: var(--paper);
-  max-height: 20vh;
-  overflow: auto;
-  overscroll-behavior: contain;
-  padding: 0 14px 14px;
-  margin: 0 -14px -14px;
-}
-
-.review.typing .dock {
-  margin-top: 0;
-}
-
-.review.typing .dock {
-  padding-bottom: 12px;
-  padding-top: 10px;
-  gap: 8px;
-}
-
-.review.typing .answer {
-  font-size: 1.15rem;
-  padding: 10px 14px;
-}
-
-.review.typing .accents {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  gap: 6px;
-  scrollbar-width: none;
-}
-
-.review.typing .accents::-webkit-scrollbar {
-  display: none;
-}
-
-.review.typing .accents button {
-  flex: none;
-  min-width: 38px;
-  min-height: 36px;
-  padding: 4px 0;
-  font-size: 1rem;
-}
-
-.review.typing button.big {
-  padding: 12px;
-  min-height: 46px;
-  font-size: 1rem;
-  box-shadow: var(--shadow);
-}
-
-.review.typing {
-  gap: 10px;
-  padding-top: calc(env(safe-area-inset-top) + 8px);
-}
-
-.review.typing .card {
-  padding: 12px 14px 14px;
-  box-shadow:
-    6px 7px 0 var(--accent),
-    6px 7px 0 var(--stroke) var(--outline);
-}
-
-.review.typing .tag {
-  font-size: 0.6rem;
-  padding: 3px 9px;
-  margin-bottom: 8px;
-}
-
-.review.typing .scroller {
-  gap: 10px;
-}
-
-.review.typing .prompt {
-  font-size: 1.2rem;
-}
-
-.review.typing .bubble {
-  padding: 10px 13px;
-}
-
-.review.typing .grades button {
-  min-height: 46px;
-  padding: 8px 10px;
-}
-
-
 .progress {
-  /* stays put while a tall card scrolls, so ending a round is always one tap away */
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  padding: 6px 0;
-  margin-top: -6px;
-  background: var(--paper);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1281,6 +1100,7 @@ button.danger-link {
   gap: 14px;
 }
 
+/* a long answer wraps rather than pushing the speaker button off the edge */
 .answer-block .solution {
   flex: 1;
   min-width: 0;

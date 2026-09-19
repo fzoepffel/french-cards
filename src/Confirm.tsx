@@ -17,10 +17,9 @@ export interface ConfirmProps {
  * In-app confirmation. Used for every action that takes cards out of the rotation or
  * overwrites progress, so nothing irreversible happens on a single tap.
  *
- * Rendered into the app frame rather than in place: an animated ancestor becomes the
+ * Rendered into <body> rather than in place: an animated ancestor becomes the
  * containing block for position: fixed in Safari, which left the dialog sitting in
- * the middle of the page instead of the middle of the screen. The frame is the
- * visible area, so the dialog centres on what the reader can actually see.
+ * the middle of the page instead of the middle of the screen.
  */
 export function Confirm({ title, body, confirmLabel, cancelLabel = 'Abbrechen', destructive, onConfirm, onCancel }: ConfirmProps) {
   const cancelRef = useRef<HTMLButtonElement>(null)
@@ -55,6 +54,6 @@ export function Confirm({ title, body, confirmLabel, cancelLabel = 'Abbrechen', 
         </div>
       </div>
     </div>,
-    document.getElementById('frame') ?? document.body,
+    document.body,
   )
 }

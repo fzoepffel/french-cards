@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Rating, type Grade } from 'ts-fsrs'
 import {
   CARDS,
@@ -62,64 +62,20 @@ interface SessionResult {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' })
-  const primer = useRef<HTMLInputElement>(null)
-  /**
-   * iOS opens the keyboard only inside a real tap, and the first card of a round is
-   * rendered a tick after the tap that asks for it. Focusing this field during the tap
-   * opens the keyboard, and the card's answer field takes the focus over once it is
-   * there. It lives up here so it outlives the screen change: if the focused element
-   * disappears, the keyboard goes with it.
-   */
-  const openKeyboard = () => primer.current?.focus()
-  const closeKeyboard = () => {
-    if (document.activeElement === primer.current) primer.current?.blur()
+
+  if (screen.name === 'review') {
+    return <Review queue={screen.queue} onFinish={(result) => setScreen({ name: 'done', result })} />
   }
-
-  // Only the screens that type may hold the keyboard open. Coming back from a round
-  // must not leave the hidden field with the focus.
-  useEffect(() => {
-    if (screen.name !== 'review' && screen.name !== 'placement') closeKeyboard()
-  })
-
-  const screenView = () => {
-    if (screen.name === 'review') {
-      return <Review queue={screen.queue} onFinish={(result) => setScreen({ name: 'done', result })} />
-    }
-    if (screen.name === 'done') {
-      return <Done result={screen.result} onHome={() => setScreen({ name: 'home' })} />
-    }
-    if (screen.name === 'placement') {
-      return <Placement onDone={() => setScreen({ name: 'home' })} />
-    }
-    return (
-      <Home
-        onStart={(queue) => setScreen({ name: 'review', queue })}
-        onPlacement={() => setScreen({ name: 'placement' })}
-        openKeyboard={openKeyboard}
-        closeKeyboard={closeKeyboard}
-      />
-    )
+  if (screen.name === 'done') {
+    return <Done result={screen.result} onHome={() => setScreen({ name: 'home' })} />
   }
-
-  return (
-    <>
-      <input ref={primer} className="kb-primer" tabIndex={-1} aria-hidden inputMode="text" />
-      {screenView()}
-    </>
-  )
+  if (screen.name === 'placement') {
+    return <Placement onDone={() => setScreen({ name: 'home' })} />
+  }
+  return <Home onStart={(queue) => setScreen({ name: 'review', queue })} onPlacement={() => setScreen({ name: 'placement' })} />
 }
 
-function Home({
-  onStart,
-  onPlacement,
-  openKeyboard,
-  closeKeyboard,
-}: {
-  onStart: (queue: StudyCard[]) => void
-  onPlacement: () => void
-  openKeyboard: () => void
-  closeKeyboard: () => void
-}) {
+function Home({ onStart, onPlacement }: { onStart: (queue: StudyCard[]) => void; onPlacement: () => void }) {
   const [s, setS] = useState<Stats | null>(null)
   const [limits, setLim] = useState<Limits>(getLimits)
   const [skip, setSkipState] = useState<SkipSettings>(getSkip)
@@ -143,15 +99,10 @@ function Home({
   const start = async (topics?: string[]) => {
     const queue = await buildQueue(topics)
     if (queue.length) onStart(queue)
-    // Nothing to practise: let the keyboard that the tap opened go again.
-    else (document.activeElement as HTMLElement | null)?.blur()
   }
 
   const updateLimit = (key: keyof Limits, value: string) => {
-    const next = {
-      ...limits,
-      [key]: Math.max(0, Math.min(100, Number(value) || 0)),
-    }
+    const next = { ...limits, [key]: Math.max(0, Math.min(100, Number(value) || 0)) }
     setLim(next)
     setLimits(next)
     refresh()
@@ -225,12 +176,7 @@ function Home({
   const firstRun = !!s && s.learned === 0 && !skip.placed
 
   return (
-    <main
-      className="home"
-      onPointerDownCapture={(e) => {
-        if (!(e.target as HTMLElement).closest('[data-starts-round]')) closeKeyboard()
-      }}
-    >
+    <main className="home">
       <header className="masthead">
         <Mark />
         <div>
@@ -278,22 +224,13 @@ function Home({
       ) : firstRun ? (
         <section className="firstrun">
           <h2>{t('Wie möchtest du anfangen?')}</h2>
-          <button
-            className="big primary"
-            data-starts-round
-            onClick={() => {
-              openKeyboard()
-              onPlacement()
-            }}
-          >
+          <button className="big primary" onClick={onPlacement}>
             {t('Einstufung machen')}
             <small>{t('Ein kurzer Test überspringt, was du schon kannst')}</small>
           </button>
           <button
             className="big"
-            data-starts-round
             onClick={() => {
-              openKeyboard()
               markPlaced()
               setSkipState(getSkip())
               start()
@@ -306,21 +243,14 @@ function Home({
       ) : (
         <button
           className="primary big"
-          data-starts-round
           onClick={async () => {
-            openKeyboard()
             const queue = total ? await buildQueue() : await buildExtraQueue(10)
             if (queue.length) onStart(queue)
-            else (document.activeElement as HTMLElement | null)?.blur()
           }}
         >
           {total ? t(doneToday ? 'Heutige Runde fortsetzen' : 'Heutige Runde starten') : t('Noch eine Runde')}
           <small>
-            {total
-              ? t(total === 1 ? 'noch {n} Karte' : 'noch {n} Karten', {
-                  n: total,
-                })
-              : t('{n} Karten', { n: 10 })}
+            {total ? t(total === 1 ? 'noch {n} Karte' : 'noch {n} Karten', { n: total }) : t('{n} Karten', { n: 10 })}
           </small>
         </button>
       )}
@@ -340,12 +270,7 @@ function Home({
         <h2>
           {t('Themen')}
           <span className="count">
-            {s
-              ? t('{seen} von {total} Karten schon gesehen', {
-                  seen: s.learned,
-                  total: s.total,
-                })
-              : ''}
+            {s ? t('{seen} von {total} Karten schon gesehen', { seen: s.learned, total: s.total }) : ''}
           </span>
         </h2>
         <p className="small">
@@ -354,10 +279,7 @@ function Home({
           )}
         </p>
         {SECTIONS.map((section, i) => {
-          const rows = section.topics.map((t) => ({
-            ...t,
-            p: s?.topics.get(t.id),
-          }))
+          const rows = section.topics.map((t) => ({ ...t, p: s?.topics.get(t.id) }))
           const all = rows.reduce((n, r) => n + (r.p?.total ?? 0), 0)
           const sectionDue = rows.reduce((n, r) => n + (r.p?.due ?? 0), 0)
           const sectionLevels = [0, 1, 2, 3].map((i) => rows.reduce((n, r) => n + (r.p?.levels[i] ?? 0), 0))
@@ -368,9 +290,7 @@ function Home({
             <details
               key={section.id}
               className="section"
-              style={{
-                ['--accent-c' as string]: SECTION_COLOURS[i % SECTION_COLOURS.length],
-              }}
+              style={{ ['--accent-c' as string]: SECTION_COLOURS[i % SECTION_COLOURS.length] }}
             >
               <summary>
                 <span>{section.title}</span>
@@ -379,11 +299,9 @@ function Home({
                   className="play"
                   disabled={!playable}
                   aria-label={t('{title} üben', { title: section.title })}
-                  data-starts-round
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    openKeyboard()
                     start(section.topics.map((topic) => topic.id))
                   }}
                 >
@@ -406,11 +324,7 @@ function Home({
                         <button
                           className="topic-main"
                           disabled={empty || complete || skipped}
-                          data-starts-round
-                          onClick={() => {
-                            openKeyboard()
-                            start([r.id])
-                          }}
+                          onClick={() => start([r.id])}
                           aria-label={t('{title} üben', { title: r.title })}
                         >
                           <span className="topic-head">
@@ -431,9 +345,7 @@ function Home({
                           aria-pressed={skipped}
                           aria-label={
                             skipped
-                              ? t('{title} wieder aufnehmen', {
-                                  title: r.title,
-                                })
+                              ? t('{title} wieder aufnehmen', { title: r.title })
                               : t('{title} kann ich schon', { title: r.title })
                           }
                           onClick={() => skipTopic(r.id, r.title)}
@@ -444,9 +356,7 @@ function Home({
                       <button
                         className={`bar-toggle ${open ? 'open' : ''}`}
                         aria-expanded={open}
-                        aria-label={t('Lernstand von {title}', {
-                          title: r.title,
-                        })}
+                        aria-label={t('Lernstand von {title}', { title: r.title })}
                         onClick={() => setOpenTopic(open ? null : r.id)}
                       >
                         <Levels levels={p?.levels} total={p?.total ?? 0} />
@@ -487,9 +397,7 @@ function Home({
           <span>
             {t('Einstufung')}
             {skip.knownWordRank
-              ? t(': Wörter bis Rang {rank} übersprungen', {
-                  rank: skip.knownWordRank,
-                })
+              ? t(': Wörter bis Rang {rank} übersprungen', { rank: skip.knownWordRank })
               : t(': noch nicht gemacht')}
           </span>
           <button onClick={onPlacement}>{t(skip.placed ? 'Wiederholen' : 'Starten')}</button>
@@ -641,7 +549,6 @@ function Home({
 
 const ACCENTS = ['é', 'è', 'ê', 'à', 'â', 'ç', 'ù', 'û', 'î', 'ï', 'ô', 'œ', 'ë']
 
-
 /**
  * The four mastery levels, weakest first. The ranges are the review interval the
  * card has reached, which is the honest answer to "how well do I know this".
@@ -732,55 +639,20 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const [picked, setPicked] = useState<string | null>(null)
   const [verdict, setVerdict] = useState<Verdict | null>(null)
   const [busy, setBusy] = useState(false)
-  const result = useRef<SessionResult>({
-    reviewed: 0,
-    right: 0,
-    missed: [],
-    scored: new Set(),
-  })
+  const result = useRef<SessionResult>({ reviewed: 0, right: 0, missed: [], scored: new Set() })
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
   const [again, setAgain] = useState<Record<Grade, string> | null>(null)
   const [confirmEnd, setConfirmEnd] = useState(false)
 
   const selfGraded = card.format === 'sentence'
   const choose = card.format === 'choose'
-  // The field having the focus means the keyboard is up. No viewport measurement is
-  // involved: on iOS those numbers are unreliable while the keyboard is showing.
-  const [typing, setTyping] = useState(false)
-  const dockRef = useRef<HTMLDivElement>(null)
-  // Only a software keyboard takes room away, so a mouse and a real keyboard keep
-  // the roomy layout even while the field has the focus.
-  const [touch] = useState(() => window.matchMedia('(pointer: coarse)').matches)
-
-  /**
-   * The browser scrolls the focused field into view, which can leave the button below
-   * it under the keyboard. Asking for the whole bar instead brings the button along.
-   * It waits for the keyboard animation, and the browser does the arithmetic.
-   */
-  const showBar = () => {
-    // "nearest" leaves the page alone when the bar is already in view, which it is
-    // whenever the card and the bar fit above the keyboard together.
-    setTimeout(() => dockRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 350)
-  }
-  // Typed cards keep the keyboard open for the whole round: every button below
-  // refuses focus, so the field never loses it and iOS never folds the keyboard away.
-  const keepKeyboard = (e: React.PointerEvent) => {
-    if (!choose) e.preventDefault()
-  }
   // Whole sentences never fit on one line, so those answers get a box that wraps.
   const multiline = card.format === 'sentence' || card.format === 'rewrite' || card.format === 'fix'
   const answers = acceptedAnswers(card)
 
   useEffect(() => {
     const el = inputRef.current
-    // A card with buttons instead of a field has no use for the keyboard.
-    if (el) {
-      el.focus()
-      setTyping(document.activeElement === el)
-    } else {
-      ;(document.activeElement as HTMLElement | null)?.blur()
-      setTyping(false)
-    }
+    el?.focus()
     if (el instanceof HTMLTextAreaElement) {
       el.style.height = 'auto'
       el.style.height = `${el.scrollHeight}px`
@@ -800,9 +672,6 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
     if (verdict) return
     // Nothing typed means the answer is not known; show it and count the card as missed.
     setVerdict(blank ? 'wrong' : check(input, answers))
-    // The answer, the note and the buttons need the room the keyboard was taking.
-    inputRef.current?.blur()
-    setTyping(false)
   }
 
   const pick = (option: string) => {
@@ -813,11 +682,6 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
 
   const next = async (g: Grade) => {
     if (busy) return
-    // Focus while the tap is still being handled: iOS opens the keyboard only then.
-    if (!choose) {
-      inputRef.current?.focus()
-      setTyping(true)
-    }
     setBusy(true)
     await grade(card.id, g)
     const r = result.current
@@ -868,163 +732,106 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
   const showSource = card.format === 'rewrite' || (card.fr && !card.fr.includes('___') && card.format !== 'fix')
 
   return (
-    <main className={`review ${typing && touch ? 'typing' : ''}`}>
+    <main className="review">
       <div className="progress">
         <button className="link" onClick={() => (result.current.reviewed ? setConfirmEnd(true) : onFinish(result.current))}>
           {t('Runde beenden')}
         </button>
-        <span>
-          {t(queue.length === 1 ? 'noch {n} Karte' : 'noch {n} Karten', { n: queue.length })}
-        </span>
+        <span>{t(queue.length === 1 ? 'noch {n} Karte' : 'noch {n} Karten', { n: queue.length })}</span>
       </div>
 
-      <div className="scroller">
-        <article className="card">
-          <span className="tag">
-            {topicTitle(card)} · {t(FORMAT_LABEL[card.format])}
-          </span>
-          {card.format === 'conjugate' ? (
-            <>
-              <div className="bubble">
-                <p className="prompt" lang="fr">
-                  {card.task}
-                </p>
-              </div>
-              {card.de && <p className="hint">{card.de}</p>}
-            </>
-          ) : (
-            <>
-              {card.de && (
-                <div className="bubble">
-                  <p className="prompt">{card.de}</p>
-                </div>
-              )}
-              {card.fr?.includes('___') && (
-                <p className="cloze" lang="fr">
-                  {card.fr}
-                </p>
-              )}
-              {showSource && (
-                <p className="cloze" lang="fr">
-                  {card.fr}
-                </p>
-              )}
-              {card.format === 'fix' && <p className="task instruction">{t('Finde den Fehler und schreib den Satz richtig.')}</p>}
-              {card.task && <p className="task">{card.task}</p>}
-            </>
-          )}
-          {card.hint && <p className="hint">{card.hint}</p>}
-        </article>
-
-        {choose && (
+      <article className="card">
+        <span className="tag">
+          {topicTitle(card)} · {t(FORMAT_LABEL[card.format])}
+        </span>
+        {card.format === 'conjugate' ? (
           <>
-            {!verdict && <p className="small center">{t('Tippe die richtige Form an.')}</p>}
-            <div className="options">
-              {card.options!.map((o) => {
-                const state = !verdict ? '' : o === card.answer ? 'is-ok' : o === picked ? 'is-bad' : 'is-dim'
-                return (
-                  <button key={o} className={`option ${state}`} lang="fr" onClick={() => pick(o)} disabled={!!verdict}>
-                    {o}
-                  </button>
-                )
-              })}
+            <div className="bubble">
+              <p className="prompt" lang="fr">
+                {card.task}
+              </p>
             </div>
+            {card.de && <p className="hint">{card.de}</p>}
+          </>
+        ) : (
+          <>
+            {card.de && (
+              <div className="bubble">
+                <p className="prompt">{card.de}</p>
+              </div>
+            )}
+            {card.fr?.includes('___') && (
+              <p className="cloze" lang="fr">
+                {card.fr}
+              </p>
+            )}
+            {showSource && (
+              <p className="cloze" lang="fr">
+                {card.fr}
+              </p>
+            )}
+            {card.format === 'fix' && <p className="task">{t('Finde den Fehler und schreib den Satz richtig.')}</p>}
+            {card.task && <p className="task">{card.task}</p>}
           </>
         )}
+        {card.hint && <p className="hint">{card.hint}</p>}
+      </article>
 
-        {verdict && (
-          <section className="reveal" aria-live="polite">
-            {!selfGraded && (
-              <p className={`verdict ${ok ? 'ok' : 'bad'}`}>
-                {t(VERDICT_TEXT[verdict])}
-                {verdict === 'correct' && <Burst />}
-              </p>
-            )}
-            {selfGraded && verdict !== 'wrong' && <p className="verdict ok">{t(VERDICT_TEXT[verdict])}</p>}
-            <div className="answer-block">
-              {hook && (
-                <span className="hook" aria-hidden>
-                  {hook}
-                </span>
-              )}
-              <p className="solution" lang="fr">
-                {card.format === 'translate' ? <Gendered answer={card.answer} /> : spoken}
-              </p>
-              {canSpeak() && (
-                <button
-                  className="icon speak"
-                  onPointerDown={keepKeyboard}
-                  onClick={() => speak(spoken)}
-                  aria-label={t('Aussprache anhören')}
-                >
-                  <SpeakerIcon />
+      {choose ? (
+        <>
+          {!verdict && <p className="small center">{t('Tippe die richtige Form an.')}</p>}
+          <div className="options">
+            {card.options!.map((o) => {
+              const state = !verdict ? '' : o === card.answer ? 'is-ok' : o === picked ? 'is-bad' : 'is-dim'
+              return (
+                <button key={o} className={`option ${state}`} lang="fr" onClick={() => pick(o)} disabled={!!verdict}>
+                  {o}
                 </button>
-              )}
-            </div>
-            {verdict === 'accent' && <p className="small">{t('Akzente zählen als Fehler, sie verändern die Aussprache.')}</p>}
-            {verdict === 'typo' && (
-              <p className="small">{t('Ein Buchstabe daneben. Zählt als gewusst, kommt aber früher wieder.')}</p>
-            )}
-            {card.note && <p className="note">{card.note}</p>}
-            {selfGraded && <p className="small">{t('Vergleiche mit deiner Antwort. Wie gut wusstest du es?')}</p>}
-          </section>
-        )}
-      </div>
-
-      {/* The answer field and its buttons sit at the foot of the frame, which ends where
-          the keyboard begins, so nothing has to be lifted out of the way. */}
-      {!(choose && !verdict) && (
-        <div className="dock" ref={dockRef}>
-          {!choose &&
-            (multiline ? (
-              <textarea
-                ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-                className={`answer ${verdict ? (ok ? 'is-ok' : selfGraded ? '' : 'is-bad') : ''}`}
-                value={input}
-                rows={2}
-                onChange={(e) => {
-                  if (verdict) return
-                  setInput(e.target.value)
-                  e.target.style.height = 'auto'
-                  e.target.style.height = `${e.target.scrollHeight}px`
-                }}
-                onKeyDown={onKey}
-                onFocus={() => {
-                  setTyping(true)
-                  showBar()
-                }}
-                onBlur={() => setTyping(false)}
-                placeholder={t(PLACEHOLDER[card.format] ?? 'Antwort')}
-                lang="fr"
-                autoCapitalize="off"
-                autoCorrect="off"
-                autoComplete="off"
-                spellCheck={false}
-                enterKeyHint={verdict ? 'next' : 'go'}
-              />
-            ) : (
-              <input
-                ref={inputRef as React.RefObject<HTMLInputElement>}
-                className={`answer ${verdict ? (ok ? 'is-ok' : selfGraded ? '' : 'is-bad') : ''}`}
-                value={input}
-                onChange={(e) => !verdict && setInput(e.target.value)}
-                onKeyDown={onKey}
-                onFocus={() => {
-                  setTyping(true)
-                  showBar()
-                }}
-                onBlur={() => setTyping(false)}
-                placeholder={t(PLACEHOLDER[card.format] ?? 'Antwort')}
-                lang="fr"
-                autoCapitalize="off"
-                autoCorrect="off"
-                autoComplete="off"
-                spellCheck={false}
-                enterKeyHint={verdict ? 'next' : 'go'}
-              />
-            ))}
-
-          {!choose && !verdict && (
+              )
+            })}
+          </div>
+        </>
+      ) : (
+        <>
+          {multiline ? (
+            <textarea
+              ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+              className={`answer ${verdict ? (ok ? 'is-ok' : selfGraded ? '' : 'is-bad') : ''}`}
+              value={input}
+              rows={2}
+              onChange={(e) => {
+                setInput(e.target.value)
+                e.target.style.height = 'auto'
+                e.target.style.height = `${e.target.scrollHeight}px`
+              }}
+              onKeyDown={onKey}
+              readOnly={!!verdict}
+              placeholder={t(PLACEHOLDER[card.format] ?? 'Antwort')}
+              lang="fr"
+              autoCapitalize="off"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
+              enterKeyHint={verdict ? 'next' : 'done'}
+            />
+          ) : (
+            <input
+              ref={inputRef as React.RefObject<HTMLInputElement>}
+              className={`answer ${verdict ? (ok ? 'is-ok' : selfGraded ? '' : 'is-bad') : ''}`}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={onKey}
+              readOnly={!!verdict}
+              placeholder={t(PLACEHOLDER[card.format] ?? 'Antwort')}
+              lang="fr"
+              autoCapitalize="off"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
+              enterKeyHint={verdict ? 'next' : 'done'}
+            />
+          )}
+          {!verdict && (
             <div className="accents" aria-label="Sonderzeichen">
               {ACCENTS.map((ch) => (
                 <button key={ch} onPointerDown={(e) => e.preventDefault()} onClick={() => insert(ch)}>
@@ -1033,61 +840,89 @@ function Review({ queue: initial, onFinish }: { queue: StudyCard[]; onFinish: (r
               ))}
             </div>
           )}
-
-          {!choose && !verdict && (
-            <button className={`big ${blank && !selfGraded ? 'quiet' : 'primary'}`} onPointerDown={keepKeyboard} onClick={submit}>
+          {!verdict && (
+            <button className={`big ${blank && !selfGraded ? 'quiet' : 'primary'}`} onClick={submit}>
               {t(selfGraded ? 'Aufdecken' : blank ? 'Weiß ich nicht' : 'Prüfen')}
             </button>
           )}
+        </>
+      )}
 
-          {verdict &&
-            (selfGraded ? (
+      {verdict && (
+        <section className="reveal" aria-live="polite">
+          {!selfGraded && (
+            <p className={`verdict ${ok ? 'ok' : 'bad'}`}>
+              {t(VERDICT_TEXT[verdict])}
+              {verdict === 'correct' && <Burst />}
+            </p>
+          )}
+          {selfGraded && verdict !== 'wrong' && <p className="verdict ok">{t(VERDICT_TEXT[verdict])}</p>}
+          <div className="answer-block">
+            {hook && (
+              <span className="hook" aria-hidden>
+                {hook}
+              </span>
+            )}
+            <p className="solution" lang="fr">
+              {card.format === 'translate' ? <Gendered answer={card.answer} /> : spoken}
+            </p>
+            {canSpeak() && (
+              <button className="icon speak" onClick={() => speak(spoken)} aria-label={t('Aussprache anhören')}>
+                <SpeakerIcon />
+              </button>
+            )}
+          </div>
+          {verdict === 'accent' && <p className="small">{t('Akzente zählen als Fehler, sie verändern die Aussprache.')}</p>}
+          {verdict === 'typo' && (
+            <p className="small">{t('Ein Buchstabe daneben. Zählt als gewusst, kommt aber früher wieder.')}</p>
+          )}
+          {card.note && <p className="note">{card.note}</p>}
+
+          {selfGraded ? (
+            <>
+              <p className="small">{t('Vergleiche mit deiner Antwort. Wie gut wusstest du es?')}</p>
               <div className="grades">
-                <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Again)}>
+                <button onClick={() => next(Rating.Again)}>
                   {t('Falsch')}
                   <small>{again ? again[Rating.Again] : ' '}</small>
                 </button>
-                <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Hard)}>
+                <button onClick={() => next(Rating.Hard)}>
                   {t('Fast')}
                   <small>{again ? again[Rating.Hard] : ' '}</small>
                 </button>
-                <button className="primary" onPointerDown={keepKeyboard} onClick={() => next(Rating.Good)}>
+                <button className="primary" onClick={() => next(Rating.Good)}>
                   {t('Richtig')}
                   <small>{again ? again[Rating.Good] : ' '}</small>
                 </button>
-                <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Easy)}>
+                <button onClick={() => next(Rating.Easy)}>
                   {t('Sehr leicht')}
                   <small>{again ? again[Rating.Easy] : ' '}</small>
                 </button>
               </div>
-            ) : (
-              <div className="grades">
-                {ok ? (
-                  <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Easy)}>
-                    {t('Wusste ich sofort')}
-                    <small>{again ? again[Rating.Easy] : ' '}</small>
-                  </button>
-                ) : (
-                  !choose &&
-                  !blank && (
-                    <button onPointerDown={keepKeyboard} onClick={() => next(Rating.Good)}>
-                      {t('Zählt als richtig')}
-                      <small>{again ? again[Rating.Good] : ' '}</small>
-                    </button>
-                  )
-                )}
-                <button
-                  className="primary"
-                  autoFocus={choose}
-                  onPointerDown={keepKeyboard}
-                  onClick={() => next(AUTO_GRADE[verdict])}
-                >
-                  {t('Weiter')}
-                  <small>{again ? again[AUTO_GRADE[verdict]] : ' '}</small>
+            </>
+          ) : (
+            <div className="grades">
+              {ok ? (
+                <button onClick={() => next(Rating.Easy)}>
+                  {t('Wusste ich sofort')}
+                  <small>{again ? again[Rating.Easy] : ' '}</small>
                 </button>
-              </div>
-            ))}
-        </div>
+              ) : (
+                !choose &&
+                !blank && (
+                  <button onClick={() => next(Rating.Good)}>
+                    {t('Zählt als richtig')}
+                    <small>{again ? again[Rating.Good] : ' '}</small>
+                  </button>
+                )
+              )}
+              <button className="primary" autoFocus={choose} onClick={() => next(AUTO_GRADE[verdict])}>
+                {t('Weiter')}
+                <small>{again ? again[AUTO_GRADE[verdict]] : ' '}</small>
+              </button>
+            </div>
+          )}
+        </section>
       )}
 
       {confirmEnd && (
@@ -1215,7 +1050,7 @@ function Placement({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <main className="review placement">
+    <main className="review">
       <div className="progress">
         <button className="link" onClick={() => setLeaving(true)}>
           Abbrechen
@@ -1300,12 +1135,7 @@ function Done({ result, onHome }: { result: SessionResult; onHome: () => void })
       <Seal score={`${result.right}/${result.reviewed}`} perfect={perfect} />
       {perfect && <p className="parfait center">{t('Parfait')}</p>}
       <p className="score">
-        {perfect
-          ? t('Alles richtig.')
-          : t('{right} von {total} richtig', {
-              right: result.right,
-              total: result.reviewed,
-            })}
+        {perfect ? t('Alles richtig.') : t('{right} von {total} richtig', { right: result.right, total: result.reviewed })}
       </p>
       {tomorrow !== null && (
         <p className="small center">
